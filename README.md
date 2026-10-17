@@ -49,7 +49,8 @@ Table Editor.
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Open **Project Settings → API** and copy:
    - Project URL → `SUPABASE_URL`
-   - `anon` `public` key → `SUPABASE_ANON_KEY`
+   - `anon` `public` key, or the **publishable** key → `SUPABASE_ANON_KEY`
+   - Do **not** copy the `service_role` key or a key that starts with `sb_secret_`. Those are secret keys and the browser will show “Forbidden use of secret API key in browser.”
 3. Open **SQL Editor**, paste `supabase/schema.sql`, and run it.
 4. Open **Authentication → Users → Add user** and create volunteer accounts.
    Turn off **Confirm email** under Authentication settings if you will
@@ -72,8 +73,10 @@ in the browser because Row Level Security protects the portal data.
 1. Import this GitHub repository in [vercel.com](https://vercel.com).
 2. Add environment variables:
    - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_ANON_KEY` (anon/public or publishable key only)
 3. Deploy. The build script writes `assets/js/env.js` from those values and copies the site into `public/` for Vercel.
+4. If login shows “Forbidden use of secret API key in browser,” the Vercel
+   value is the secret key. Replace it with the anon/public key and redeploy.
 
 The public pages work without Supabase. The login page will show a setup
 message until the keys and SQL are in place.

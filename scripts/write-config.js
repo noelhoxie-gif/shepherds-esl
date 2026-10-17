@@ -29,11 +29,39 @@ function loadDotEnv(file) {
 
 loadDotEnv(envPath);
 
+function jwtRole(token) {
+  const parts = String(token || "").split(".");
+  if (parts.length !== 3) return null;
+  try {
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
+    const data = JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+    return data.role || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function isSecretApiKey(key) {
+  if (!key) return false;
+  if (key.indexOf("sb_secret_") === 0) return true;
+  if (key.indexOf("service_role") !== -1) return true;
+  return jwtRole(key) === "service_role";
+}
+
 const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const key =
+let key =
   process.env.SUPABASE_ANON_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_PUBLISHABLE_KEY ||
   "";
+
+if (isSecretApiKey(key)) {
+  console.error(
+    "SUPABASE_ANON_KEY is a secret/service_role key. Use the anon or publishable key from Project Settings → API. Secret keys cannot be used in the browser."
+  );
+  process.exit(1);
+}
 
 const contents =
   "window.ESL_CONFIG = " +
