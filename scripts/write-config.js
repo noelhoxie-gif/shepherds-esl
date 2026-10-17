@@ -54,3 +54,14 @@ console.log(
     ? "Wrote assets/js/env.js with Supabase URL."
     : "Wrote assets/js/env.js with empty Supabase settings. Add SUPABASE_URL and SUPABASE_ANON_KEY to .env or Vercel."
 );
+
+const publicDir = path.join(root, "public");
+fs.rmSync(publicDir, { recursive: true, force: true });
+fs.mkdirSync(publicDir, { recursive: true });
+["index.html", "login.html", "volunteer.html"].forEach(function (file) {
+  fs.copyFileSync(path.join(root, file), path.join(publicDir, file));
+});
+fs.cpSync(path.join(root, "assets"), path.join(publicDir, "assets"), {
+  recursive: true
+});
+console.log("Copied site files into public/ for Vercel.");

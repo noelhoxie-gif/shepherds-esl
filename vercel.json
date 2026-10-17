@@ -1,5 +1,6 @@
 {
   "buildCommand": "node scripts/write-config.js",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/volunteer", "destination": "/volunteer.html" },
     { "source": "/login", "destination": "/login.html" }

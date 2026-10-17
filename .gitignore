@@ -5,3 +5,4 @@ assets/js/env.js
 .DS_Store
 node_modules
 .vercel
+public

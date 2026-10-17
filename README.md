@@ -52,7 +52,7 @@ read announcements.
 2. Add environment variables:
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
-3. Deploy. The build script writes `assets/js/env.js` from those values.
+3. Deploy. The build script writes `assets/js/env.js` from those values and copies the site into `public/` for Vercel.
 
 The public pages work without Supabase. The login page will show a setup
 message until the keys and SQL are in place.
