@@ -18,29 +18,22 @@
     return article;
   }
 
-  async function loadTips() {
-    var result = await window.ESL.client()
-      .from("teacher_tips")
-      .select("id, display_order, title, body")
-      .eq("active", true)
-      .order("display_order");
-
-    if (result.error) throw result.error;
-    var tips = result.data || [];
-    empty.hidden = tips.length > 0;
-    list.replaceChildren();
-    tips.forEach(function (tip) {
-      list.appendChild(tipCard(tip));
-    });
-  }
-
   document.addEventListener("esl:portal-ready", function () {
-    loadTips().catch(function (error) {
-      var message = (error && error.message) || "Could not load teacher tips.";
-      if (/teacher_tips/i.test(message)) {
-        message = "The teacher tips page is not set up yet. Run supabase/schema.sql in the Supabase SQL Editor.";
-      }
-      window.ESLPortal.showMessage(message, true);
-    });
+    window.ESLPortal
+      .api("teacher-tips")
+      .then(function (data) {
+        var tips = data.items || [];
+        empty.hidden = tips.length > 0;
+        list.replaceChildren();
+        tips.forEach(function (tip) {
+          list.appendChild(tipCard(tip));
+        });
+      })
+      .catch(function (error) {
+        window.ESLPortal.showMessage(
+          (error && error.message) || "Could not load teacher tips.",
+          true
+        );
+      });
   });
 })();

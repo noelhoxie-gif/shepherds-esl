@@ -45,26 +45,32 @@
     });
   }
 
-  async function signedMediaUrl(path) {
-    if (!path) return null;
-    var result = await window.ESL.client()
-      .storage.from("volunteer-media")
-      .createSignedUrl(path, 3600);
-    if (result.error) return null;
-    return result.data && result.data.signedUrl;
+  async function api(resource, options) {
+    var params = new URLSearchParams((options && options.query) || {});
+    params.set("resource", resource);
+    var result = await fetch("/api/portal?" + params.toString(), {
+      method: (options && options.method) || "GET",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: options && options.body ? JSON.stringify(options.body) : undefined
+    });
+    var data = {};
+    try {
+      data = await result.json();
+    } catch (err) {
+      data = {};
+    }
+    if (!result.ok) {
+      throw new Error(data.error || "Could not load volunteer data.");
+    }
+    return data;
   }
 
   buildNav();
 
   window.ESLPortal = {
     showMessage: showMessage,
-    signedMediaUrl: signedMediaUrl
+    api: api
   };
-
-  if (!window.ESL.isConfigured()) {
-    showMessage(window.ESL.setupMessage(), true);
-    return;
-  }
 
   if (portalContent) portalContent.hidden = false;
   document.dispatchEvent(new CustomEvent("esl:portal-ready"));

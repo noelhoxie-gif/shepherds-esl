@@ -4,7 +4,7 @@
   var list = document.getElementById("announcement-list");
   var empty = document.getElementById("announcement-empty");
 
-  function card(item, videoUrl) {
+  function card(item) {
     var article = document.createElement("article");
     article.className = "card announcement-card";
 
@@ -31,58 +31,35 @@
     body.textContent = item.body;
     article.appendChild(body);
 
-    if (videoUrl) {
+    if (item.videoUrl) {
       var video = document.createElement("video");
       video.controls = true;
       video.preload = "metadata";
-      video.src = videoUrl;
+      video.src = item.videoUrl;
       article.appendChild(video);
     }
 
     return article;
   }
 
-  async function signedVideoUrl(path) {
-    if (!path) return null;
-    var result = await window.ESL.client()
-      .storage.from("volunteer-media")
-      .createSignedUrl(path, 3600);
-    if (result.error) return null;
-    return result.data && result.data.signedUrl;
-  }
-
-  async function loadAnnouncements() {
-    var result = await window.ESL.client()
-      .from("announcements")
-      .select("id, title, body, video_path, created_at")
-      .eq("published", true)
-      .order("created_at", { ascending: false });
-
-    if (result.error) {
-      throw result.error;
-    }
-
-    var rows = result.data || [];
-    if (!rows.length) {
-      empty.hidden = false;
-      return;
-    }
-
-    for (var i = 0; i < rows.length; i++) {
-      var videoUrl = await signedVideoUrl(rows[i].video_path);
-      list.appendChild(card(rows[i], videoUrl));
-    }
-  }
-
   document.addEventListener("esl:portal-ready", function () {
-    loadAnnouncements()
-      .catch(function (err) {
-        var message = (err && err.message) || "Could not load announcements.";
-        if (/relation .*announcements/i.test(message) || /could not find the table/i.test(message)) {
-          message =
-            "The announcements table is missing. Run supabase/schema.sql in the Supabase SQL Editor.";
+    window.ESLPortal
+      .api("announcements")
+      .then(function (data) {
+        var rows = data.items || [];
+        if (!rows.length) {
+          empty.hidden = false;
+          return;
         }
-        window.ESLPortal.showMessage(message, true);
+        rows.forEach(function (item) {
+          list.appendChild(card(item));
+        });
+      })
+      .catch(function (err) {
+        window.ESLPortal.showMessage(
+          (err && err.message) || "Could not load announcements.",
+          true
+        );
       });
   });
 })();

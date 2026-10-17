@@ -30,14 +30,8 @@
   }
 
   async function loadVideo() {
-    var result = await window.ESL.client()
-      .from("training_videos")
-      .select("kind, title, description, vimeo_id, video_path")
-      .eq("kind", kind)
-      .maybeSingle();
-
-    if (result.error) throw result.error;
-    var row = result.data;
+    var result = await window.ESLPortal.api("training", { query: { kind: kind } });
+    var row = result.item;
     if (!row) {
       empty.hidden = false;
       return;
@@ -53,10 +47,9 @@
       return;
     }
 
-    var fileUrl = await window.ESLPortal.signedMediaUrl(row.video_path);
-    if (fileUrl) {
+    if (row.videoUrl) {
       empty.hidden = true;
-      player.appendChild(filePlayer(fileUrl));
+      player.appendChild(filePlayer(row.videoUrl));
       return;
     }
 

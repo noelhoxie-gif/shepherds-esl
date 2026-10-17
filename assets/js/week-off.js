@@ -48,13 +48,8 @@
   }
 
   async function loadRequests() {
-    var result = await window.ESL.client()
-      .from("week_off_requests")
-      .select("id, week_of, volunteer_name, assignment, note, status, created_at")
-      .order("week_of", { ascending: false });
-
-    if (result.error) throw result.error;
-    var requests = result.data || [];
+    var result = await window.ESLPortal.api("week-off");
+    var requests = result.items || [];
     empty.hidden = requests.length > 0;
     list.replaceChildren();
     requests.forEach(function (request) {
@@ -63,12 +58,11 @@
   }
 
   function showError(error) {
-    var message = (error && error.message) || "Could not save the request.";
-    if (/week_off_requests/i.test(message)) {
-      message = "Week-off requests are not set up yet. Run supabase/schema.sql in the Supabase SQL Editor.";
-    }
     status.textContent = "";
-    window.ESLPortal.showMessage(message, true);
+    window.ESLPortal.showMessage(
+      (error && error.message) || "Could not save the request.",
+      true
+    );
   }
 
   dateInput.addEventListener("change", function () {
@@ -86,22 +80,18 @@
     var submit = form.querySelector('button[type="submit"]');
     submit.disabled = true;
 
-    window.ESL.client()
-      .from("week_off_requests")
-      .upsert(
-        {
+    window.ESLPortal
+      .api("week-off", {
+        method: "POST",
+        body: {
           volunteer_name: form.elements.volunteer_name.value.trim(),
           volunteer_email: form.elements.volunteer_email.value.trim(),
           week_of: dateInput.value,
-          assignment: form.elements.assignment.value.trim() || null,
-          note: form.elements.note.value.trim() || null,
-          status: "submitted"
-        },
-        { onConflict: "volunteer_email,week_of" }
-      )
-      .select()
-      .then(function (result) {
-        if (result.error) throw result.error;
+          assignment: form.elements.assignment.value.trim(),
+          note: form.elements.note.value.trim()
+        }
+      })
+      .then(function () {
         status.textContent = "Your week-off request has been submitted.";
         form.reset();
         return loadRequests();

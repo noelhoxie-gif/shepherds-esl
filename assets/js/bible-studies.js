@@ -23,9 +23,9 @@
     number.textContent = "Bible Study " + study.display_order;
     article.appendChild(number);
 
-    var title = document.createElement("h3");
-    title.textContent = study.name;
-    article.appendChild(title);
+    var heading = document.createElement("h3");
+    heading.textContent = study.name;
+    article.appendChild(heading);
 
     [
       detail("Meets", study.meeting_time),
@@ -54,30 +54,22 @@
     return article;
   }
 
-  async function loadStudies() {
-    var result = await window.ESL.client()
-      .from("bible_studies")
-      .select("id, display_order, name, meeting_time, location, contact_name, contact_email, contact_phone")
-      .eq("active", true)
-      .order("display_order")
-      .limit(10);
-
-    if (result.error) throw result.error;
-    var studies = result.data || [];
-    empty.hidden = studies.length > 0;
-    list.replaceChildren();
-    studies.forEach(function (study) {
-      list.appendChild(studyCard(study));
-    });
-  }
-
   document.addEventListener("esl:portal-ready", function () {
-    loadStudies().catch(function (error) {
-      var message = (error && error.message) || "Could not load Bible studies.";
-      if (/bible_studies/i.test(message)) {
-        message = "The Bible study directory is not set up yet. Run supabase/schema.sql in the Supabase SQL Editor.";
-      }
-      window.ESLPortal.showMessage(message, true);
-    });
+    window.ESLPortal
+      .api("bible-studies")
+      .then(function (data) {
+        var studies = data.items || [];
+        empty.hidden = studies.length > 0;
+        list.replaceChildren();
+        studies.forEach(function (study) {
+          list.appendChild(studyCard(study));
+        });
+      })
+      .catch(function (error) {
+        window.ESLPortal.showMessage(
+          (error && error.message) || "Could not load Bible studies.",
+          true
+        );
+      });
   });
 })();

@@ -111,16 +111,10 @@
     var month = currentMonth.getMonth();
     var first = dateKey(new Date(year, month, 1));
     var last = dateKey(new Date(year, month + 1, 0));
-    var result = await window.ESL.client()
-      .from("class_sessions")
-      .select("id, session_date, starts_at, class_name, building, room, volunteer_assignment")
-      .gte("session_date", first)
-      .lte("session_date", last)
-      .order("session_date")
-      .order("starts_at");
-
-    if (result.error) throw result.error;
-    sessions = result.data || [];
+    var result = await window.ESLPortal.api("class-sessions", {
+      query: { from: first, to: last }
+    });
+    sessions = result.items || [];
     render();
   }
 
