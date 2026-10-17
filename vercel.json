@@ -3,11 +3,14 @@
   "outputDirectory": "public",
   "rewrites": [
     { "source": "/volunteer", "destination": "/volunteer.html" },
-    { "source": "/login", "destination": "/login.html" }
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/class-calendar", "destination": "/class-calendar.html" },
+    { "source": "/bible-studies", "destination": "/bible-studies.html" },
+    { "source": "/week-off", "destination": "/week-off.html" }
   ],
   "headers": [
     {
-      "source": "/(login.html|volunteer.html|login|volunteer)",
+      "source": "/(login.html|volunteer.html|class-calendar.html|bible-studies.html|week-off.html|login|volunteer|class-calendar|bible-studies|week-off)",
       "headers": [
         { "key": "Cache-Control", "value": "no-store" }
       ]

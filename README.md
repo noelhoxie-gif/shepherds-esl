@@ -1,7 +1,7 @@
 # ESL Ministry Website — The Shepherd's Church
 
 Public site for free ESL classes at The Shepherd's Church, plus a
-Supabase-backed volunteer login for private announcements.
+Supabase-backed volunteer portal.
 
 ## Local preview
 
@@ -23,6 +23,9 @@ npm run build
 - Public site: `index.html`
 - Login: `login.html` (also `/login` on Vercel)
 - Announcements: `volunteer.html` (also `/volunteer` on Vercel)
+- Class and building calendar: `class-calendar.html`
+- Bible study directory: `bible-studies.html`
+- Week-off requests: `week-off.html`
 
 The login page has three experiences, switched with tabs or
 `login.html?experience=password|google|apple`:
@@ -47,13 +50,17 @@ Google/Apple accounts cannot open volunteer pages.
    Turn off **Confirm email** under Authentication settings if you will
    create accounts by hand and do not want a confirmation email.
 5. Add announcements in **Table Editor → announcements**.
-6. Optional videos: upload files under 50 MB to the `volunteer-media`
+6. Add class, building, room, and assignment details in
+   **Table Editor → class_sessions**.
+7. Add up to 10 Bible studies and their contacts in
+   **Table Editor → bible_studies**. Use `display_order` values 1–10.
+8. Review volunteer requests in **Table Editor → week_off_requests**.
+9. Optional videos: upload files under 50 MB to the `volunteer-media`
    bucket, then put the file path (for example `training/welcome.mp4`)
    in the announcement `video_path` column.
 
 Never put the `service_role` key in this website. The anon key is safe
-in the browser because Row Level Security only lets signed-in volunteers
-read announcements.
+in the browser because Row Level Security protects the portal data.
 
 ## Google and Apple login
 

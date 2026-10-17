@@ -58,7 +58,14 @@ console.log(
 const publicDir = path.join(root, "public");
 fs.rmSync(publicDir, { recursive: true, force: true });
 fs.mkdirSync(publicDir, { recursive: true });
-["index.html", "login.html", "volunteer.html"].forEach(function (file) {
+[
+  "index.html",
+  "login.html",
+  "volunteer.html",
+  "class-calendar.html",
+  "bible-studies.html",
+  "week-off.html"
+].forEach(function (file) {
   fs.copyFileSync(path.join(root, file), path.join(publicDir, file));
 });
 fs.cpSync(path.join(root, "assets"), path.join(publicDir, "assets"), {

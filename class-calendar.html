@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Class Calendar | ESL Ministry</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="assets/images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alata&family=Libre+Franklin:wght@400;600&family=Montserrat:wght@400;600&family=Open+Sans:wght@400;600;700&family=Vollkorn:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#calendar">Skip to class calendar</a>
+
+  <header class="site-header">
+    <div class="container header-main">
+      <a class="brand" href="index.html" aria-label="ESL Ministry home">
+        <img src="assets/images/logo-white.png" alt="The Shepherd's Church" width="200" height="70" />
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-program"><small>Volunteer Portal</small>ESL Ministry</span>
+      </a>
+      <nav class="main-nav is-static portal-nav" aria-label="Volunteer portal">
+        <ul>
+          <li><a href="volunteer.html">Announcements</a></li>
+          <li><a href="class-calendar.html" aria-current="page">Class Calendar</a></li>
+          <li><a href="bible-studies.html">Bible Studies</a></li>
+          <li><a href="week-off.html">Request Week Off</a></li>
+          <li><span id="volunteer-user" class="nav-user"></span></li>
+          <li><button class="text-button" id="logout-button" type="button">Sign out</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="calendar">
+    <div class="hero page-hero curve-bottom">
+      <div class="container">
+        <p class="hero-eyebrow">Volunteer Portal</p>
+        <h1>Class &amp; Building Calendar</h1>
+      </div>
+    </div>
+
+    <div class="section section-light">
+      <div class="container">
+        <div class="notice" id="volunteer-setup" hidden></div>
+        <div id="portal-content" hidden>
+          <div class="portal-heading">
+            <div>
+              <h2 id="calendar-month">Class Calendar</h2>
+              <p>Class, room, building, and volunteer assignments will appear here when they are provided.</p>
+            </div>
+            <div class="calendar-controls" aria-label="Calendar controls">
+              <button class="portal-button" id="calendar-previous" type="button">Previous</button>
+              <button class="portal-button" id="calendar-today" type="button">Today</button>
+              <button class="portal-button" id="calendar-next" type="button">Next</button>
+            </div>
+          </div>
+
+          <div class="calendar-shell">
+            <div class="calendar-weekdays" aria-hidden="true">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+              <span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div id="class-calendar-grid" class="calendar-grid" role="grid" aria-labelledby="calendar-month"></div>
+          </div>
+          <p id="calendar-empty" class="portal-empty" hidden>No classes have been added for this month yet.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom">&copy; <span id="year">2026</span> The Shepherd&rsquo;s Church &middot; ESL Ministry</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/env.js"></script>
+  <script>window.ESL_CONFIG = window.ESL_CONFIG || { supabaseUrl: "", supabaseAnonKey: "" };</script>
+  <script src="assets/js/supabase-client.js"></script>
+  <script src="assets/js/class-calendar.js"></script>
+  <script src="assets/js/portal-common.js"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

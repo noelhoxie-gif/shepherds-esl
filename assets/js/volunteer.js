@@ -3,9 +3,6 @@
 
   var list = document.getElementById("announcement-list");
   var empty = document.getElementById("announcement-empty");
-  var setupBox = document.getElementById("volunteer-setup");
-  var userLabel = document.getElementById("volunteer-user");
-  var logout = document.getElementById("logout-button");
 
   function card(item, videoUrl) {
     var article = document.createElement("article");
@@ -45,11 +42,6 @@
     return article;
   }
 
-  function showSetup(message) {
-    setupBox.hidden = false;
-    setupBox.textContent = message;
-  }
-
   async function signedVideoUrl(path) {
     if (!path) return null;
     var result = await window.ESL.client()
@@ -82,34 +74,15 @@
     }
   }
 
-  logout.addEventListener("click", function () {
-    window.ESL.signOut().finally(function () {
-      window.location.replace("login.html");
-    });
+  document.addEventListener("esl:portal-ready", function () {
+    loadAnnouncements()
+      .catch(function (err) {
+        var message = (err && err.message) || "Could not load announcements.";
+        if (/relation .*announcements/i.test(message) || /could not find the table/i.test(message)) {
+          message =
+            "The announcements table is missing. Run supabase/schema.sql in the Supabase SQL Editor.";
+        }
+        window.ESLPortal.showMessage(message, true);
+      });
   });
-
-  if (!window.ESL.isConfigured()) {
-    showSetup(window.ESL.setupMessage());
-    logout.hidden = true;
-    return;
-  }
-
-  window.ESL
-    .currentSession()
-    .then(function (session) {
-      if (!session) {
-        window.location.replace("login.html?next=volunteer.html");
-        return null;
-      }
-      userLabel.textContent = session.user.email || "Volunteer";
-      return loadAnnouncements();
-    })
-    .catch(function (err) {
-      var message = (err && err.message) || "Could not load announcements.";
-      if (/relation .*announcements/i.test(message) || /could not find the table/i.test(message)) {
-        message =
-          "The announcements table is missing. Run supabase/schema.sql in the Supabase SQL Editor.";
-      }
-      showSetup(message);
-    });
 })();
