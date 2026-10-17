@@ -45,25 +45,6 @@
     return result.data.session;
   }
 
-  function redirectTarget() {
-    return new URL("volunteer.html", window.location.href).href;
-  }
-
-  async function signInWithProvider(provider) {
-    var db = client();
-    if (!db) {
-      throw new Error("Supabase is not configured yet.");
-    }
-    var result = await db.auth.signInWithOAuth({
-      provider: provider,
-      options: {
-        redirectTo: redirectTarget()
-      }
-    });
-    if (result.error) throw result.error;
-    return result.data;
-  }
-
   async function signOut() {
     var db = client();
     if (!db) return;
@@ -79,7 +60,6 @@
     client: client,
     currentSession: currentSession,
     signIn: signIn,
-    signInWithProvider: signInWithProvider,
     signOut: signOut,
     setupMessage: setupMessage
   };

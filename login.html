@@ -35,38 +35,20 @@
       <div class="auth-card">
         <p class="hero-eyebrow" style="color: var(--gold)">Volunteers only</p>
         <h1>Sign in</h1>
-        <p>Choose a sign-in method. Church-created accounts use email and password. Google and Apple use your existing account.</p>
+        <p>Use the email and password stored for your volunteer account.</p>
 
         <div class="notice" id="login-setup" hidden></div>
         <div class="form-error" id="login-error" hidden></div>
 
-        <div class="auth-methods" role="tablist" aria-label="Sign-in method">
-          <button type="button" class="auth-method is-active" data-method="password" aria-selected="true">Email</button>
-          <button type="button" class="auth-method" data-method="google" aria-selected="false">Google</button>
-          <button type="button" class="auth-method" data-method="apple" aria-selected="false">Apple</button>
-        </div>
+        <form id="login-form" novalidate>
+          <label for="username">Email</label>
+          <input id="username" name="username" type="email" autocomplete="username" required placeholder="you@example.com" />
 
-        <div class="auth-panel is-active" data-panel="password">
-          <form id="login-form" novalidate>
-            <label for="username">Email</label>
-            <input id="username" name="username" type="email" autocomplete="username" required placeholder="you@example.com" />
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
 
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required />
-
-            <button class="btn btn-red btn-flat" id="login-submit" type="submit">Sign in</button>
-          </form>
-        </div>
-
-        <div class="auth-panel" data-panel="google" hidden>
-          <p>Continue with the Google account you use for church or personal email.</p>
-          <button class="btn oauth-btn oauth-google" id="google-login" type="button">Continue with Google</button>
-        </div>
-
-        <div class="auth-panel" data-panel="apple" hidden>
-          <p>Continue with your Apple ID. This is the smoothest option on iPhone and Mac.</p>
-          <button class="btn oauth-btn oauth-apple" id="apple-login" type="button">Continue with Apple</button>
-        </div>
+          <button class="btn btn-red btn-flat" id="login-submit" type="submit">Sign in</button>
+        </form>
       </div>
     </div>
   </main>

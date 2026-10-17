@@ -27,17 +27,22 @@ npm run build
 - Bible study directory: `bible-studies.html`
 - Week-off requests: `week-off.html`
 
-The login page has three experiences, switched with tabs or
-`login.html?experience=password|google|apple`:
+Volunteers sign in with email and password only. There is no Google or
+Apple login, and passwords are never stored in a website table.
 
-- **Email:** church-created volunteer accounts (no public sign-up form)
-- **Google:** OAuth through Google Cloud
-- **Apple:** OAuth through an Apple Developer account
+## Volunteer emails and passwords
 
-Any signed-in user can currently read announcements. Before turning on
-Google or Apple, either keep **Authentication → Providers → Email →
-Confirm email / disable sign-ups** strict, or add an allow-list so random
-Google/Apple accounts cannot open volunteer pages.
+Store each volunteer account in **Supabase → Authentication → Users →
+Add user**:
+
+1. Enter the volunteer’s email and a password.
+2. Leave **Auto Confirm User** on (or turn off **Confirm email** under
+   Authentication settings) so church-created accounts can sign in right away.
+3. Keep public sign-up off so only accounts you create can open the portal.
+
+Supabase stores the email and a hashed password. You can reset a password
+from the same Users screen. Do not put passwords in `schema.sql` or the
+Table Editor.
 
 ## Connect Supabase
 
@@ -61,40 +66,6 @@ Google/Apple accounts cannot open volunteer pages.
 
 Never put the `service_role` key in this website. The anon key is safe
 in the browser because Row Level Security protects the portal data.
-
-## Google and Apple login
-
-The website already calls `signInWithOAuth`. The providers stay off until
-you enable them in Supabase. Your callback URL is:
-
-`https://nplkmngfvfmweiulinxl.supabase.co/auth/v1/callback`
-
-In **Authentication → URL Configuration**, set:
-
-- Site URL to the Vercel domain
-- Redirect URLs to include the Vercel domain, `/volunteer.html`, `/login.html`, and local `http://localhost:8000/**`
-
-### Google
-
-1. Create a Google Cloud project and open [Google Auth Platform](https://console.cloud.google.com/auth/overview).
-2. Configure branding, then add scopes: `openid`, `userinfo.email`, `userinfo.profile`.
-3. Create an OAuth **Web application** client.
-4. Authorized JavaScript origins: your Vercel URL and `http://localhost:8000`.
-5. Authorized redirect URI: the Supabase callback URL above.
-6. Paste the Client ID and Client Secret into **Supabase → Authentication → Providers → Google** and enable it.
-
-### Apple
-
-Apple web login needs a paid [Apple Developer](https://developer.apple.com) account.
-
-1. Create an App ID with **Sign in with Apple**.
-2. Create a **Services ID** (this is the client ID for the website).
-3. Set the return URL to the same Supabase callback URL.
-4. Create a Sign in with Apple key (`.p8`) and generate the secret in the Supabase Apple provider screen.
-5. Enable **Apple** in **Authentication → Providers**.
-6. Rotate that secret at least every 6 months, or Apple login will stop working.
-
-Official guides: [Google](https://supabase.com/docs/guides/auth/social-login/auth-google) and [Apple](https://supabase.com/docs/guides/auth/social-login/auth-apple).
 
 ## Deploy on Vercel
 
