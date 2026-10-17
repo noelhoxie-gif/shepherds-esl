@@ -42,6 +42,7 @@
         </div>
 
         <div class="form-error" id="login-error" role="alert" hidden></div>
+        <div class="form-success" id="login-success" role="status" hidden></div>
 
         <form id="login-form" class="auth-panel" novalidate>
           <label for="login">Username or email</label>
@@ -51,6 +52,25 @@
           <input id="password" name="password" type="password" autocomplete="current-password" required />
 
           <button class="btn btn-red btn-flat" id="login-submit" type="submit">Sign in</button>
+          <button class="text-button auth-forgot" id="forgot-link" type="button">Forgot password?</button>
+        </form>
+
+        <form id="recover-form" class="auth-panel" hidden novalidate>
+          <label for="recover-login">Username or email</label>
+          <input id="recover-login" name="login" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required />
+
+          <button class="btn btn-red btn-flat" id="recover-submit" type="submit">Send reset email</button>
+          <button class="text-button auth-forgot" id="recover-back" type="button">Back to sign in</button>
+        </form>
+
+        <form id="reset-form" class="auth-panel" hidden novalidate>
+          <label for="reset-password">New password</label>
+          <input id="reset-password" name="password" type="password" autocomplete="new-password" minlength="8" required />
+
+          <label for="reset-password-confirm">Confirm new password</label>
+          <input id="reset-password-confirm" name="confirm" type="password" autocomplete="new-password" minlength="8" required />
+
+          <button class="btn btn-red btn-flat" id="reset-submit" type="submit">Save new password</button>
         </form>
 
         <form id="signup-form" class="auth-panel" hidden novalidate>

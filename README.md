@@ -89,7 +89,12 @@ You can also add a volunteer by hand:
    values ('PASTE-UID-HERE', 'maria', 'maria@example.com', 'Maria Lopez');
    ```
 
-To reset a password, open the user in **Authentication → Users**. Deleting
+Volunteers can reset a password from the login page (**Forgot password?**).
+In Supabase, open **Authentication → URL Configuration** and add your live
+login page to **Redirect URLs**, for example `https://your-site.vercel.app/login.html`.
+Set **Site URL** to the same website. The reset email uses that address.
+
+You can also set a new password in **Authentication → Users**. Deleting
 the Auth user also deletes their profile row.
 
 Sign-in stores the session in HttpOnly cookies, so page scripts cannot read

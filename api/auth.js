@@ -38,6 +38,21 @@ module.exports = async function handler(req, res) {
       return supabase.send(res, 200, { user: user });
     }
 
+    if (req.method === "POST" && action === "recover") {
+      const body = await supabase.readBody(req);
+      await supabase.requestPasswordReset(req, body.login);
+      return supabase.send(res, 200, {
+        ok: true,
+        message: "If that account exists, we sent a password reset email."
+      });
+    }
+
+    if (req.method === "POST" && action === "update-password") {
+      const body = await supabase.readBody(req);
+      const user = await supabase.completePasswordReset(req, res, body);
+      return supabase.send(res, 200, { user: user });
+    }
+
     if (req.method === "POST" && action === "logout") {
       await supabase.signOut(req, res);
       return supabase.send(res, 200, { ok: true });
