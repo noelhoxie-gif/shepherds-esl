@@ -133,3 +133,68 @@ create policy "volunteers_can_update_own_week_off_requests"
   to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Lesson plans and other class materials for signed-in volunteers.
+create table if not exists public.curriculum_items (
+  id uuid primary key default gen_random_uuid(),
+  display_order integer not null default 1,
+  title text not null,
+  description text,
+  url text,
+  file_path text,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+alter table public.curriculum_items enable row level security;
+
+drop policy if exists "volunteers_can_read_curriculum_items" on public.curriculum_items;
+create policy "volunteers_can_read_curriculum_items"
+  on public.curriculum_items
+  for select
+  to authenticated
+  using (active = true);
+
+-- One teacher training video and one tutor training video.
+-- Add a Vimeo ID or a volunteer-media file path in the Table Editor.
+create table if not exists public.training_videos (
+  kind text primary key check (kind in ('teacher', 'tutor')),
+  title text not null,
+  description text,
+  vimeo_id text,
+  video_path text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.training_videos enable row level security;
+
+drop policy if exists "volunteers_can_read_training_videos" on public.training_videos;
+create policy "volunteers_can_read_training_videos"
+  on public.training_videos
+  for select
+  to authenticated
+  using (true);
+
+insert into public.training_videos (kind, title, description)
+values
+  ('teacher', 'Teacher Training Video', 'Watch this video before you lead a class.'),
+  ('tutor', 'Tutor Training Video', 'Watch this video before you tutor students.')
+on conflict (kind) do nothing;
+
+create table if not exists public.teacher_tips (
+  id uuid primary key default gen_random_uuid(),
+  display_order integer not null default 1,
+  title text not null,
+  body text not null,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+alter table public.teacher_tips enable row level security;
+
+drop policy if exists "volunteers_can_read_teacher_tips" on public.teacher_tips;
+create policy "volunteers_can_read_teacher_tips"
+  on public.teacher_tips
+  for select
+  to authenticated
+  using (active = true);

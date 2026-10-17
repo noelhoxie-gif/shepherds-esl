@@ -19,6 +19,7 @@
     if (next.charAt(0) === "/" || next.indexOf("://") !== -1) {
       return "volunteer.html";
     }
+    if (next.indexOf(".html") === -1) next += ".html";
     return next;
   }
 

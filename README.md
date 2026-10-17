@@ -26,6 +26,10 @@ npm run build
 - Class and building calendar: `class-calendar.html`
 - Bible study directory: `bible-studies.html`
 - Week-off requests: `week-off.html`
+- Curriculum: `curriculum.html`
+- Teacher training video: `teacher-training.html`
+- Tutor training video: `tutor-training.html`
+- Teacher tips: `teacher-tips.html`
 
 Volunteers sign in with email and password only. There is no Google or
 Apple login, and passwords are never stored in a website table.
@@ -61,9 +65,15 @@ Table Editor.
 7. Add up to 10 Bible studies and their contacts in
    **Table Editor → bible_studies**. Use `display_order` values 1–10.
 8. Review volunteer requests in **Table Editor → week_off_requests**.
-9. Optional videos: upload files under 50 MB to the `volunteer-media`
-   bucket, then put the file path (for example `training/welcome.mp4`)
-   in the announcement `video_path` column.
+9. Add curriculum titles, links, or file paths in
+   **Table Editor → curriculum_items**.
+10. Add teacher and tutor training videos in
+    **Table Editor → training_videos**. Use a Vimeo ID or a
+    `volunteer-media` file path.
+11. Add teacher tips in **Table Editor → teacher_tips**.
+12. Optional videos: upload files under 50 MB to the `volunteer-media`
+    bucket, then put the file path (for example `training/welcome.mp4`)
+    in the announcement `video_path` column.
 
 Never put the `service_role` key in this website. The anon key is safe
 in the browser because Row Level Security protects the portal data.

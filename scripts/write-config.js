@@ -92,7 +92,11 @@ fs.mkdirSync(publicDir, { recursive: true });
   "volunteer.html",
   "class-calendar.html",
   "bible-studies.html",
-  "week-off.html"
+  "week-off.html",
+  "curriculum.html",
+  "teacher-training.html",
+  "tutor-training.html",
+  "teacher-tips.html"
 ].forEach(function (file) {
   fs.copyFileSync(path.join(root, file), path.join(publicDir, file));
 });
