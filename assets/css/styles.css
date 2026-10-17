@@ -951,7 +951,7 @@ p { margin: 0 0 1.1em; }
   position: relative;
   width: 100%;
   max-width: 900px;
-  margin: 0 auto;
+  margin: 0 auto 40px;
   aspect-ratio: 16 / 9;
   border-radius: 12px;
   overflow: hidden;
