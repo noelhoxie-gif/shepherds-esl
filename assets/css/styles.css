@@ -845,6 +845,11 @@ p { margin: 0 0 1.1em; }
   margin-top: 24px;
 }
 
+.auth-card form[hidden],
+.auth-panel[hidden] {
+  display: none;
+}
+
 .auth-card label {
   font-family: var(--font-nav);
   font-size: 12px;

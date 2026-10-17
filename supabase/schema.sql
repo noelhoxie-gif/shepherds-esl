@@ -40,22 +40,17 @@ security definer
 set search_path = public
 as $$
 begin
-  if not exists (
-    select 1
-    from auth.users
-    where id = p_user_id
-      and lower(email) = lower(p_email)
-  ) then
-    raise exception 'invalid user' using errcode = '42501';
-  end if;
-
   insert into public.volunteer_profiles (user_id, username, email, display_name)
   values (
     p_user_id,
     lower(trim(p_username)),
     lower(trim(p_email)),
     nullif(trim(p_display_name), '')
-  );
+  )
+  on conflict (user_id) do update
+    set username = excluded.username,
+        email = excluded.email,
+        display_name = excluded.display_name;
 end;
 $$;
 
