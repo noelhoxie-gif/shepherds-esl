@@ -54,25 +54,32 @@ Do not put a Supabase key in HTML, `assets/js`, or GitHub.
 Passwords are stored by Supabase Auth, which saves only a secure hash. The
 `volunteer_profiles` table adds a username for each login.
 
-1. In Supabase, open **Authentication → Sign In / Providers** and turn off
-   **Allow new users to sign up**, so only the team can create accounts.
-2. Open **Authentication → Users → Add user → Create new user**. Enter the
+Volunteers can create an account on `login.html` (name, username, email,
+password). The `/api/auth` function creates the Auth user and profile row,
+then signs them in. They can sign in later with either the username or the
+email.
+
+Anyone who can open the login page can create an account. Keep **Allow new
+users to sign up** turned off in **Authentication → Sign In / Providers**.
+The website still creates users because it uses the server key, not the
+public signup form.
+
+You can also add a volunteer by hand:
+
+1. Open **Authentication → Users → Add user → Create new user**. Enter the
    volunteer's email and a password, and check **Auto Confirm User**.
-3. Copy the new user's **UID**, then run this in the SQL Editor:
+2. Copy the new user's **UID**, then run this in the SQL Editor:
 
    ```sql
    insert into public.volunteer_profiles (user_id, username, email, display_name)
    values ('PASTE-UID-HERE', 'maria', 'maria@example.com', 'Maria Lopez');
    ```
 
-Volunteers can sign in with either the username or the email. To reset a
-password, open the user in **Authentication → Users** and choose
-**Send password recovery** or set a new password. Deleting the Auth user also
-deletes their profile row.
+To reset a password, open the user in **Authentication → Users**. Deleting
+the Auth user also deletes their profile row.
 
-Sign-in happens in the `/api/auth` function. It stores the session in
-HttpOnly cookies, so page scripts cannot read the token, and `/api/portal`
-returns data only to signed-in volunteers.
+Sign-in stores the session in HttpOnly cookies, so page scripts cannot read
+the token, and `/api/portal` returns data only to signed-in volunteers.
 
 ## Deploy on Vercel
 

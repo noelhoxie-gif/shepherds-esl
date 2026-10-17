@@ -29,6 +29,15 @@ module.exports = async function handler(req, res) {
       return supabase.send(res, 200, { user: user });
     }
 
+    if (req.method === "POST" && action === "signup") {
+      const body = await supabase.readBody(req);
+      const user = await supabase.signUp(req, res, body);
+      if (!user) {
+        return supabase.send(res, 400, { error: "Could not create the account." });
+      }
+      return supabase.send(res, 200, { user: user });
+    }
+
     if (req.method === "POST" && action === "logout") {
       await supabase.signOut(req, res);
       return supabase.send(res, 200, { ok: true });

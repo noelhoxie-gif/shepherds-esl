@@ -879,6 +879,10 @@ p { margin: 0 0 1.1em; }
   margin: 24px 0 8px;
 }
 
+.auth-tabs {
+  grid-template-columns: 1fr 1fr;
+}
+
 .auth-method {
   font-family: var(--font-nav);
   font-size: 12px;
