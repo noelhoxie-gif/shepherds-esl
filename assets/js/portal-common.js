@@ -11,6 +11,7 @@
   var portalPages = [
     { href: "index.html", label: "Home" },
     { href: "volunteer.html", label: "Announcements" },
+    { href: "core-values.html", label: "Core Values" },
     { href: "class-calendar.html", label: "Class Calendar" },
     { href: "curriculum.html", label: "Curriculum" },
     { href: "teacher-training.html", label: "Teacher Training" },
@@ -28,10 +29,50 @@
   }
 
   function buildNav(user) {
-    var list = document.querySelector(".portal-nav ul");
-    if (!list) return;
-    list.replaceChildren();
+    var header = document.querySelector(".site-header");
+    var headerMain = document.querySelector(".header-main");
+    var nav = document.querySelector(".portal-nav");
+    var list = nav && nav.querySelector("ul");
+    if (!header || !headerMain || !nav || !list) return;
 
+    header.classList.add("portal-header");
+
+    var bar = header.querySelector(".portal-nav-bar");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.className = "portal-nav-bar";
+      var inner = document.createElement("div");
+      inner.className = "container";
+      bar.appendChild(inner);
+      inner.appendChild(nav);
+      header.appendChild(bar);
+    }
+
+    var account = headerMain.querySelector(".portal-account");
+    if (!account) {
+      account = document.createElement("div");
+      account.className = "portal-account";
+      headerMain.appendChild(account);
+    }
+    account.replaceChildren();
+
+    var userLabel = document.createElement("span");
+    userLabel.className = "nav-user";
+    userLabel.textContent = user.displayName || user.username || user.email;
+    account.appendChild(userLabel);
+
+    var logout = document.createElement("button");
+    logout.type = "button";
+    logout.className = "text-button";
+    logout.textContent = "Sign out";
+    logout.addEventListener("click", function () {
+      fetch("/api/auth?action=logout", { method: "POST" }).finally(function () {
+        window.location.replace("login.html");
+      });
+    });
+    account.appendChild(logout);
+
+    list.replaceChildren();
     portalPages.forEach(function (page) {
       var item = document.createElement("li");
       var link = document.createElement("a");
@@ -43,26 +84,6 @@
       item.appendChild(link);
       list.appendChild(item);
     });
-
-    var userItem = document.createElement("li");
-    var userLabel = document.createElement("span");
-    userLabel.className = "nav-user";
-    userLabel.textContent = user.displayName || user.username || user.email;
-    userItem.appendChild(userLabel);
-    list.appendChild(userItem);
-
-    var logoutItem = document.createElement("li");
-    var logout = document.createElement("button");
-    logout.type = "button";
-    logout.className = "text-button";
-    logout.textContent = "Sign out";
-    logout.addEventListener("click", function () {
-      fetch("/api/auth?action=logout", { method: "POST" }).finally(function () {
-        window.location.replace("login.html");
-      });
-    });
-    logoutItem.appendChild(logout);
-    list.appendChild(logoutItem);
   }
 
   function goToLogin() {

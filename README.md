@@ -20,6 +20,7 @@ Click **Volunteer** on the public site. Volunteers who are not signed in are
 sent to `login.html` first. After signing in they can open:
 
 - Announcements: `volunteer.html`
+- Core values: `core-values.html`
 - Class and building calendar: `class-calendar.html`
 - Bible study directory: `bible-studies.html`
 - Week-off requests: `week-off.html`
@@ -90,9 +91,22 @@ You can also add a volunteer by hand:
    ```
 
 Volunteers can reset a password from the login page (**Forgot password?**).
-In Supabase, open **Authentication → URL Configuration** and add your live
-login page to **Redirect URLs**, for example `https://your-site.vercel.app/login.html`.
-Set **Site URL** to the same website. The reset email uses that address.
+Reset emails come from Supabase, not from this website. For them to arrive:
+
+1. **Authentication → Providers → Email** must be on.
+2. **Authentication → Email Templates → Reset Password** must be enabled.
+3. **Authentication → URL Configuration**: set **Site URL** to the live
+   website, and add both of these to **Redirect URLs**:
+   - `https://your-site.vercel.app/login.html`
+   - `https://your-site.vercel.app/**`
+4. Optional: in Vercel, set `SITE_URL` to that same website so the reset
+   link matches the allowed list.
+5. Optional: add `SUPABASE_ANON_KEY` or `SUPABASE_PUBLISHABLE_KEY` in
+   Vercel. Password reset is a public Auth action; the secret key can
+   block the email.
+6. Check spam. The built-in sender is often `noreply@mail.app.supabase.io`.
+   For reliable delivery, add a custom SMTP provider in
+   **Project Settings → Authentication**.
 
 You can also set a new password in **Authentication → Users**. Deleting
 the Auth user also deletes their profile row.
