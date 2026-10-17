@@ -872,6 +872,51 @@ p { margin: 0 0 1.1em; }
   margin-top: 8px;
 }
 
+.auth-methods {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 24px 0 8px;
+}
+
+.auth-method {
+  font-family: var(--font-nav);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border: 1px solid #d1d1d1;
+  background: var(--white);
+  color: var(--navy-dark);
+  border-radius: 100px;
+  padding: 8px 6px;
+  cursor: pointer;
+}
+
+.auth-method.is-active {
+  background: var(--navy-dark);
+  border-color: var(--navy-dark);
+  color: var(--white);
+}
+
+.auth-panel {
+  margin-top: 8px;
+}
+
+.oauth-btn {
+  width: 100%;
+  text-align: center;
+  border-width: 0;
+}
+
+.oauth-google {
+  background: var(--navy);
+}
+
+.oauth-apple {
+  background: #000;
+}
+
 .form-error {
   background: #fdeeee;
   color: var(--red);
