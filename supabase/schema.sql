@@ -1,6 +1,19 @@
 -- Run this in the Supabase SQL Editor after creating the project.
 -- Dashboard → SQL → New query → paste → Run.
 
+-- Volunteer logins. Passwords live (hashed) in Supabase Auth → Users;
+-- this table maps a short username to that Auth user's email.
+-- No policies are granted, so only the server key can read it.
+create table if not exists public.volunteer_profiles (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  username text not null unique check (username = lower(username) and username ~ '^[a-z0-9._-]{2,40}$'),
+  email text not null,
+  display_name text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.volunteer_profiles enable row level security;
+
 create table if not exists public.announcements (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -16,7 +29,7 @@ drop policy if exists "volunteers_can_read_published_announcements" on public.an
 create policy "volunteers_can_read_published_announcements"
   on public.announcements
   for select
-  to anon, authenticated
+  to authenticated
   using (published = true);
 
 insert into public.announcements (title, body)
@@ -39,7 +52,7 @@ drop policy if exists "volunteers_can_read_media" on storage.objects;
 create policy "volunteers_can_read_media"
   on storage.objects
   for select
-  to anon, authenticated
+  to authenticated
   using (bucket_id = 'volunteer-media');
 
 -- Class, building, room, and volunteer assignments shown in the portal calendar.
@@ -65,7 +78,7 @@ drop policy if exists "volunteers_can_read_class_sessions" on public.class_sessi
 create policy "volunteers_can_read_class_sessions"
   on public.class_sessions
   for select
-  to anon, authenticated
+  to authenticated
   using (true);
 
 -- The display_order constraint limits the volunteer directory to 10 positions.
@@ -88,10 +101,10 @@ drop policy if exists "volunteers_can_read_bible_studies" on public.bible_studie
 create policy "volunteers_can_read_bible_studies"
   on public.bible_studies
   for select
-  to anon, authenticated
+  to authenticated
   using (active = true);
 
--- Week-off requests are public so volunteers can see coverage without signing in.
+-- Signed-in volunteers can see every request so they know who is covering.
 create table if not exists public.week_off_requests (
   id uuid primary key default gen_random_uuid(),
   volunteer_name text,
@@ -138,21 +151,21 @@ drop policy if exists "anyone_can_read_week_off_requests" on public.week_off_req
 create policy "anyone_can_read_week_off_requests"
   on public.week_off_requests
   for select
-  to anon, authenticated
+  to authenticated
   using (true);
 
 drop policy if exists "anyone_can_submit_week_off_requests" on public.week_off_requests;
 create policy "anyone_can_submit_week_off_requests"
   on public.week_off_requests
   for insert
-  to anon, authenticated
+  to authenticated
   with check (true);
 
 drop policy if exists "anyone_can_update_week_off_requests" on public.week_off_requests;
 create policy "anyone_can_update_week_off_requests"
   on public.week_off_requests
   for update
-  to anon, authenticated
+  to authenticated
   using (true)
   with check (true);
 
@@ -174,7 +187,7 @@ drop policy if exists "volunteers_can_read_curriculum_items" on public.curriculu
 create policy "volunteers_can_read_curriculum_items"
   on public.curriculum_items
   for select
-  to anon, authenticated
+  to authenticated
   using (active = true);
 
 -- One teacher training video and one tutor training video.
@@ -194,7 +207,7 @@ drop policy if exists "volunteers_can_read_training_videos" on public.training_v
 create policy "volunteers_can_read_training_videos"
   on public.training_videos
   for select
-  to anon, authenticated
+  to authenticated
   using (true);
 
 insert into public.training_videos (kind, title, description)
@@ -218,5 +231,5 @@ drop policy if exists "volunteers_can_read_teacher_tips" on public.teacher_tips;
 create policy "volunteers_can_read_teacher_tips"
   on public.teacher_tips
   for select
-  to anon, authenticated
+  to authenticated
   using (active = true);

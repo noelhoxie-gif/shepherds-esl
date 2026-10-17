@@ -102,7 +102,23 @@
       });
   });
 
-  document.addEventListener("esl:portal-ready", function () {
+  var signedInUser = null;
+
+  function prefill() {
+    if (!signedInUser) return;
+    form.elements.volunteer_email.value = signedInUser.email || "";
+    if (!form.elements.volunteer_name.value) {
+      form.elements.volunteer_name.value = signedInUser.displayName || signedInUser.username || "";
+    }
+  }
+
+  form.addEventListener("reset", function () {
+    setTimeout(prefill, 0);
+  });
+
+  document.addEventListener("esl:portal-ready", function (event) {
+    signedInUser = (event.detail && event.detail.user) || null;
+    prefill();
     loadRequests().catch(showError);
   });
 })();

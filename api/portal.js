@@ -1,3 +1,5 @@
+const supabase = require("../lib/supabase");
+
 const ALLOWED = {
   announcements: true,
   "class-sessions": true,
@@ -8,54 +10,11 @@ const ALLOWED = {
   "week-off": true
 };
 
-function config() {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const key =
-    process.env.SUPABASE_SECRET_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "";
-  return { url: url.replace(/\/$/, ""), key };
-}
+const send = supabase.send;
+const readBody = supabase.readBody;
 
-function headers(key) {
-  const h = {
-    apikey: key,
-    Accept: "application/json",
-    "Content-Type": "application/json"
-  };
-  if (key.indexOf("sb_secret_") !== 0 && key.indexOf("sb_publishable_") !== 0) {
-    h.Authorization = "Bearer " + key;
-  }
-  return h;
-}
-
-async function rest(url, key, pathname, options) {
-  const response = await fetch(url + pathname, {
-    method: (options && options.method) || "GET",
-    headers: Object.assign(headers(key), (options && options.headers) || {}),
-    body: options && options.body ? JSON.stringify(options.body) : undefined
-  });
-  const text = await response.text();
-  let data = null;
-  if (text) {
-    try {
-      data = JSON.parse(text);
-    } catch (err) {
-      data = { message: text };
-    }
-  }
-  if (!response.ok) {
-    const message =
-      (data && (data.message || data.error_description || data.error)) ||
-      "Supabase request failed.";
-    const error = new Error(message);
-    error.status = response.status;
-    throw error;
-  }
-  return data;
+function rest(url, key, pathname, options) {
+  return supabase.request({ url: url, key: key }, pathname, options);
 }
 
 async function signedUrl(url, key, path) {
@@ -69,32 +28,6 @@ async function signedUrl(url, key, path) {
   if (!data || !data.signedURL) return null;
   if (data.signedURL.indexOf("http") === 0) return data.signedURL;
   return url + "/storage/v1" + data.signedURL;
-}
-
-function send(res, status, body) {
-  res.statusCode = status;
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.setHeader("Cache-Control", "no-store");
-  res.end(JSON.stringify(body));
-}
-
-function readBody(req) {
-  return new Promise(function (resolve, reject) {
-    var chunks = [];
-    req.on("data", function (chunk) {
-      chunks.push(chunk);
-    });
-    req.on("end", function () {
-      const raw = Buffer.concat(chunks).toString("utf8");
-      if (!raw) return resolve({});
-      try {
-        resolve(JSON.parse(raw));
-      } catch (err) {
-        reject(new Error("Invalid JSON body."));
-      }
-    });
-    req.on("error", reject);
-  });
 }
 
 async function handleGet(resource, query, url, key) {
@@ -247,12 +180,17 @@ module.exports = async function handler(req, res) {
       return send(res, 404, { error: "Unknown resource." });
     }
 
-    const cfg = config();
+    const cfg = supabase.config();
     if (!cfg.url || !cfg.key) {
       return send(res, 503, {
         error:
-          "Volunteer pages are not connected to Supabase yet. In Vercel, set SUPABASE_URL and a server key (SUPABASE_SECRET_KEY or SUPABASE_ANON_KEY), then run supabase/schema.sql."
+          "Volunteer pages are not connected to Supabase yet. In Vercel, set SUPABASE_URL and SUPABASE_SECRET_KEY, then run supabase/schema.sql."
       });
+    }
+
+    const user = await supabase.currentUser(req, res);
+    if (!user) {
+      return send(res, 401, { error: "Please sign in to view volunteer pages." });
     }
 
     if (req.method === "GET") {
@@ -262,6 +200,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "POST" && resource === "week-off") {
       const body = await readBody(req);
+      body.volunteer_email = user.email;
       return send(res, 200, await handleWeekOff(body, cfg.url, cfg.key));
     }
 

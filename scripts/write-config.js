@@ -8,6 +8,7 @@ fs.rmSync(publicDir, { recursive: true, force: true });
 fs.mkdirSync(publicDir, { recursive: true });
 [
   "index.html",
+  "login.html",
   "volunteer.html",
   "class-calendar.html",
   "bible-studies.html",

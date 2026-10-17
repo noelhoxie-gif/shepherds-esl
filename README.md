@@ -1,8 +1,8 @@
 # ESL Ministry Website — The Shepherd's Church
 
-Public site for free ESL classes at The Shepherd's Church, plus open
-volunteer pages for calendar, curriculum, training, and week-off requests.
-There is no login. Browser pages never contain a Supabase key.
+Public site for free ESL classes at The Shepherd's Church, plus
+password-protected volunteer pages for calendar, curriculum, training, and
+week-off requests. Browser pages never contain a Supabase key.
 
 ## Local preview
 
@@ -16,7 +16,8 @@ use `npx vercel dev` after adding keys to `.env`.
 
 ## Volunteer pages
 
-Click **Volunteer** on the public site to open:
+Click **Volunteer** on the public site. Volunteers who are not signed in are
+sent to `login.html` first. After signing in they can open:
 
 - Announcements: `volunteer.html`
 - Class and building calendar: `class-calendar.html`
@@ -48,12 +49,37 @@ Click **Volunteer** on the public site to open:
 
 Do not put a Supabase key in HTML, `assets/js`, or GitHub.
 
+## Volunteer logins
+
+Passwords are stored by Supabase Auth, which saves only a secure hash. The
+`volunteer_profiles` table adds a username for each login.
+
+1. In Supabase, open **Authentication → Sign In / Providers** and turn off
+   **Allow new users to sign up**, so only the team can create accounts.
+2. Open **Authentication → Users → Add user → Create new user**. Enter the
+   volunteer's email and a password, and check **Auto Confirm User**.
+3. Copy the new user's **UID**, then run this in the SQL Editor:
+
+   ```sql
+   insert into public.volunteer_profiles (user_id, username, email, display_name)
+   values ('PASTE-UID-HERE', 'maria', 'maria@example.com', 'Maria Lopez');
+   ```
+
+Volunteers can sign in with either the username or the email. To reset a
+password, open the user in **Authentication → Users** and choose
+**Send password recovery** or set a new password. Deleting the Auth user also
+deletes their profile row.
+
+Sign-in happens in the `/api/auth` function. It stores the session in
+HttpOnly cookies, so page scripts cannot read the token, and `/api/portal`
+returns data only to signed-in volunteers.
+
 ## Deploy on Vercel
 
 1. Import this GitHub repository in [vercel.com](https://vercel.com).
 2. Add `SUPABASE_URL` and `SUPABASE_SECRET_KEY`.
-3. Deploy. The build copies the static site into `public/`. The `/api/portal`
-   function authenticates to Supabase on the server.
+3. Deploy. The build copies the static site into `public/`. The `/api/auth`
+   and `/api/portal` functions talk to Supabase on the server.
 
 ## Editing public content
 

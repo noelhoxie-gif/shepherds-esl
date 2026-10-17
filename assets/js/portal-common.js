@@ -27,7 +27,7 @@
     setupBox.textContent = message;
   }
 
-  function buildNav() {
+  function buildNav(user) {
     var list = document.querySelector(".portal-nav ul");
     if (!list) return;
     list.replaceChildren();
@@ -43,6 +43,30 @@
       item.appendChild(link);
       list.appendChild(item);
     });
+
+    var userItem = document.createElement("li");
+    var userLabel = document.createElement("span");
+    userLabel.className = "nav-user";
+    userLabel.textContent = user.displayName || user.username || user.email;
+    userItem.appendChild(userLabel);
+    list.appendChild(userItem);
+
+    var logoutItem = document.createElement("li");
+    var logout = document.createElement("button");
+    logout.type = "button";
+    logout.className = "text-button";
+    logout.textContent = "Sign out";
+    logout.addEventListener("click", function () {
+      fetch("/api/auth?action=logout", { method: "POST" }).finally(function () {
+        window.location.replace("login.html");
+      });
+    });
+    logoutItem.appendChild(logout);
+    list.appendChild(logoutItem);
+  }
+
+  function goToLogin() {
+    window.location.replace("login.html?next=" + encodeURIComponent(currentPage));
   }
 
   async function api(resource, options) {
@@ -59,19 +83,39 @@
     } catch (err) {
       data = {};
     }
+    if (result.status === 401) {
+      goToLogin();
+      throw new Error("Please sign in.");
+    }
     if (!result.ok) {
       throw new Error(data.error || "Could not load volunteer data.");
     }
     return data;
   }
 
-  buildNav();
-
   window.ESLPortal = {
     showMessage: showMessage,
     api: api
   };
 
-  if (portalContent) portalContent.hidden = false;
-  document.dispatchEvent(new CustomEvent("esl:portal-ready"));
+  fetch("/api/auth?action=session", { headers: { Accept: "application/json" } })
+    .then(function (result) {
+      if (result.status === 401) {
+        goToLogin();
+        return null;
+      }
+      return result.json().then(function (data) {
+        if (!result.ok) throw new Error(data.error || "Could not check your sign-in.");
+        return data.user;
+      });
+    })
+    .then(function (user) {
+      if (!user) return;
+      buildNav(user);
+      if (portalContent) portalContent.hidden = false;
+      document.dispatchEvent(new CustomEvent("esl:portal-ready", { detail: { user: user } }));
+    })
+    .catch(function (error) {
+      showMessage((error && error.message) || "Could not check your sign-in.", true);
+    });
 })();
