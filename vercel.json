@@ -5,6 +5,7 @@
     { "source": "/login", "destination": "/login.html" },
     { "source": "/volunteer", "destination": "/volunteer.html" },
     { "source": "/core-values", "destination": "/core-values.html" },
+    { "source": "/esl-leadership", "destination": "/esl-leadership.html" },
     { "source": "/class-calendar", "destination": "/class-calendar.html" },
     { "source": "/bible-studies", "destination": "/bible-studies.html" },
     { "source": "/week-off", "destination": "/week-off.html" },
@@ -15,7 +16,7 @@
   ],
   "headers": [
     {
-      "source": "/(login.html|login|volunteer.html|core-values.html|core-values|class-calendar.html|bible-studies.html|week-off.html|curriculum.html|teacher-training.html|tutor-training.html|teacher-tips.html|volunteer|class-calendar|bible-studies|week-off|curriculum|teacher-training|tutor-training|teacher-tips)",
+      "source": "/(login.html|login|volunteer.html|core-values.html|core-values|esl-leadership.html|esl-leadership|class-calendar.html|bible-studies.html|week-off.html|curriculum.html|teacher-training.html|tutor-training.html|teacher-tips.html|volunteer|class-calendar|bible-studies|week-off|curriculum|teacher-training|tutor-training|teacher-tips)",
       "headers": [
         { "key": "Cache-Control", "value": "no-store" }
       ]

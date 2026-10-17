@@ -11,6 +11,7 @@ fs.mkdirSync(publicDir, { recursive: true });
   "login.html",
   "volunteer.html",
   "core-values.html",
+  "esl-leadership.html",
   "class-calendar.html",
   "bible-studies.html",
   "week-off.html",

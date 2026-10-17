@@ -21,6 +21,7 @@ sent to `login.html` first. After signing in they can open:
 
 - Announcements: `volunteer.html`
 - Core values: `core-values.html`
+- ESL leadership: `esl-leadership.html`
 - Class and building calendar: `class-calendar.html`
 - Bible study directory: `bible-studies.html`
 - Week-off requests: `week-off.html`
