@@ -3,7 +3,6 @@
 
 -- Volunteer logins. Passwords live (hashed) in Supabase Auth → Users;
 -- this table maps a short username to that Auth user's email.
--- No policies are granted, so only the server key can read it.
 create table if not exists public.volunteer_profiles (
   user_id uuid primary key references auth.users (id) on delete cascade,
   username text not null unique check (username = lower(username) and username ~ '^[a-z0-9._-]{2,40}$'),
@@ -13,6 +12,73 @@ create table if not exists public.volunteer_profiles (
 );
 
 alter table public.volunteer_profiles enable row level security;
+
+drop policy if exists "volunteers_can_read_own_profile" on public.volunteer_profiles;
+create policy "volunteers_can_read_own_profile"
+  on public.volunteer_profiles
+  for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "volunteers_can_insert_own_profile" on public.volunteer_profiles;
+create policy "volunteers_can_insert_own_profile"
+  on public.volunteer_profiles
+  for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+-- Writes with an sb_secret_ key often do not bypass RLS. This function
+-- runs as the table owner so signup can save the username.
+create or replace function public.register_volunteer_profile(
+  p_user_id uuid,
+  p_username text,
+  p_email text,
+  p_display_name text
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1
+    from auth.users
+    where id = p_user_id
+      and lower(email) = lower(p_email)
+  ) then
+    raise exception 'invalid user' using errcode = '42501';
+  end if;
+
+  insert into public.volunteer_profiles (user_id, username, email, display_name)
+  values (
+    p_user_id,
+    lower(trim(p_username)),
+    lower(trim(p_email)),
+    nullif(trim(p_display_name), '')
+  );
+end;
+$$;
+
+revoke all on function public.register_volunteer_profile(uuid, text, text, text) from public;
+grant execute on function public.register_volunteer_profile(uuid, text, text, text)
+  to anon, authenticated, service_role;
+
+create or replace function public.email_for_volunteer_username(p_username text)
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select email
+  from public.volunteer_profiles
+  where username = lower(trim(p_username))
+  limit 1;
+$$;
+
+revoke all on function public.email_for_volunteer_username(text) from public;
+grant execute on function public.email_for_volunteer_username(text)
+  to anon, authenticated, service_role;
 
 create table if not exists public.announcements (
   id uuid primary key default gen_random_uuid(),

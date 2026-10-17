@@ -61,6 +61,10 @@ email.
 
 Anyone who can open the login page can create an account.
 
+If signup fails with a row-level security error on `volunteer_profiles`,
+run the updated `supabase/schema.sql` in the SQL Editor. That adds a
+`register_volunteer_profile` function the server uses to save usernames.
+
 The new `sb_secret_` keys are not JWTs, so Auth's admin user API rejects
 them with "This endpoint requires a valid Bearer token." The login page
 creates accounts through `/auth/v1/signup` in that case. In Supabase:
