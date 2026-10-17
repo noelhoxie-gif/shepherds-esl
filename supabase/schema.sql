@@ -252,15 +252,18 @@ create policy "volunteers_can_read_curriculum_items"
   using (active = true);
 
 -- One teacher training video and one tutor training video.
--- Add a Vimeo ID or a volunteer-media file path in the Table Editor.
+-- Add a Vimeo ID, Google Drive/public URL, or volunteer-media file path.
 create table if not exists public.training_videos (
   kind text primary key check (kind in ('teacher', 'tutor')),
   title text not null,
   description text,
   vimeo_id text,
   video_path text,
+  video_url text,
   updated_at timestamptz not null default now()
 );
+
+alter table public.training_videos add column if not exists video_url text;
 
 alter table public.training_videos enable row level security;
 
@@ -271,11 +274,23 @@ create policy "volunteers_can_read_training_videos"
   to authenticated
   using (true);
 
-insert into public.training_videos (kind, title, description)
+insert into public.training_videos (kind, title, description, video_url)
 values
-  ('teacher', 'Teacher Training Video', 'Watch this video before you lead a class.'),
-  ('tutor', 'Tutor Training Video', 'Watch this video before you tutor students.')
+  (
+    'teacher',
+    'Teacher Training Video',
+    'Watch this video before you lead a class.',
+    'https://drive.google.com/file/d/1JA4Xo52Y9CC5haQ_kf0kttdELH5_-nD_/preview'
+  ),
+  ('tutor', 'Tutor Training Video', 'Watch this video before you tutor students.', null)
 on conflict (kind) do nothing;
+
+update public.training_videos
+set video_url = 'https://drive.google.com/file/d/1JA4Xo52Y9CC5haQ_kf0kttdELH5_-nD_/preview'
+where kind = 'teacher'
+  and coalesce(video_url, '') = ''
+  and coalesce(vimeo_id, '') = ''
+  and coalesce(video_path, '') = '';
 
 create table if not exists public.teacher_tips (
   id uuid primary key default gen_random_uuid(),

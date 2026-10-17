@@ -101,13 +101,24 @@ async function handleGet(resource, query, url, key) {
 
   if (resource === "training") {
     const kind = query.kind === "tutor" ? "tutor" : "teacher";
-    const rows =
-      (await rest(
-        url,
-        key,
-        "/rest/v1/training_videos?select=kind,title,description,vimeo_id,video_path&kind=eq." +
-          encodeURIComponent(kind)
-      )) || [];
+    let rows = [];
+    try {
+      rows =
+        (await rest(
+          url,
+          key,
+          "/rest/v1/training_videos?select=kind,title,description,vimeo_id,video_path,video_url&kind=eq." +
+            encodeURIComponent(kind)
+        )) || [];
+    } catch (err) {
+      rows =
+        (await rest(
+          url,
+          key,
+          "/rest/v1/training_videos?select=kind,title,description,vimeo_id,video_path&kind=eq." +
+            encodeURIComponent(kind)
+        )) || [];
+    }
     const row = rows[0] || null;
     if (!row) return { item: null };
     return {
@@ -116,7 +127,7 @@ async function handleGet(resource, query, url, key) {
         title: row.title,
         description: row.description,
         vimeo_id: row.vimeo_id,
-        videoUrl: await signedUrl(url, key, row.video_path)
+        videoUrl: row.video_url || (await signedUrl(url, key, row.video_path))
       }
     };
   }
