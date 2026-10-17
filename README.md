@@ -96,8 +96,10 @@ Reset emails come from Supabase, not from this website. For them to arrive:
 1. **Authentication → Providers → Email** must be on.
 2. **Authentication → Email Templates → Reset Password** must be enabled.
 3. **Authentication → URL Configuration**: set **Site URL** to the live
-   website, and add both of these to **Redirect URLs**:
+   website, and add these to **Redirect URLs** so the email opens the
+   password form instead of the public home page:
    - `https://your-site.vercel.app/login.html`
+   - `https://your-site.vercel.app/login`
    - `https://your-site.vercel.app/**`
 4. Optional: in Vercel, set `SITE_URL` to that same website so the reset
    link matches the allowed list.

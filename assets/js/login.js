@@ -15,7 +15,7 @@
   var copy = document.getElementById("auth-copy");
   var tabs = document.querySelectorAll(".auth-method");
   var tabList = document.querySelector(".auth-tabs");
-  var recovery = recoveryFromUrl();
+  var recovery = recoveryFromUrl() || readStoredRecovery();
 
   function showError(message) {
     errorBox.hidden = !message;
@@ -40,12 +40,31 @@
     var hash = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""));
     var query = new URLSearchParams(window.location.search);
     var type = hash.get("type") || query.get("type");
-    if (type !== "recovery") return null;
+    var accessToken = hash.get("access_token") || "";
+    var token = query.get("token") || query.get("token_hash") || "";
+    if (type !== "recovery" && !accessToken && !token) return null;
     return {
-      accessToken: hash.get("access_token") || "",
+      accessToken: accessToken,
       refreshToken: hash.get("refresh_token") || "",
-      token: query.get("token") || ""
+      token: token
     };
+  }
+
+  function readStoredRecovery() {
+    try {
+      var raw = window.sessionStorage.getItem("esl-recovery");
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function storeRecovery(value) {
+    try {
+      if (value && (value.accessToken || value.token)) {
+        window.sessionStorage.setItem("esl-recovery", JSON.stringify(value));
+      }
+    } catch (err) {}
   }
 
   function setBusy(button, busy, idleLabel, busyLabel) {
@@ -98,10 +117,8 @@
       })
       .catch(function () {});
   } else {
+    storeRecovery(recovery);
     showPanel("reset");
-    if (window.history && window.history.replaceState) {
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/([?&])token=[^&]+/, "").replace(/[?&]$/, ""));
-    }
   }
 
   tabs.forEach(function (tab) {
@@ -182,9 +199,11 @@
       password: password,
       accessToken: recovery && recovery.accessToken,
       refreshToken: recovery && recovery.refreshToken,
-      token: recovery && recovery.token
+      token: recovery && recovery.token,
+      tokenHash: recovery && recovery.token
     })
       .then(function () {
+        try { window.sessionStorage.removeItem("esl-recovery"); } catch (err) {}
         window.location.replace(nextPage());
       })
       .catch(function (error) {
