@@ -282,12 +282,24 @@ values
     'Watch this video before you lead a class.',
     'https://drive.google.com/file/d/1JA4Xo52Y9CC5haQ_kf0kttdELH5_-nD_/preview'
   ),
-  ('tutor', 'Tutor Training Video', 'Watch this video before you tutor students.', null)
+  (
+    'tutor',
+    'Tutor Training Video',
+    'Watch this video before you tutor students.',
+    'https://drive.google.com/file/d/1_70TF2is1b2cpFk7-xR2MdbiYooUskqk/preview'
+  )
 on conflict (kind) do nothing;
 
 update public.training_videos
 set video_url = 'https://drive.google.com/file/d/1JA4Xo52Y9CC5haQ_kf0kttdELH5_-nD_/preview'
 where kind = 'teacher'
+  and coalesce(video_url, '') = ''
+  and coalesce(vimeo_id, '') = ''
+  and coalesce(video_path, '') = '';
+
+update public.training_videos
+set video_url = 'https://drive.google.com/file/d/1_70TF2is1b2cpFk7-xR2MdbiYooUskqk/preview'
+where kind = 'tutor'
   and coalesce(video_url, '') = ''
   and coalesce(vimeo_id, '') = ''
   and coalesce(video_path, '') = '';
