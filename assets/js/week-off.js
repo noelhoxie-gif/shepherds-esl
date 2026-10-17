@@ -34,6 +34,11 @@
       name.textContent = request.volunteer_name;
       article.appendChild(name);
     }
+    if (request.class_level) {
+      var level = document.createElement("p");
+      level.textContent = "Level " + request.class_level;
+      article.appendChild(level);
+    }
     if (request.assignment) {
       var assignment = document.createElement("p");
       assignment.textContent = request.assignment;
@@ -87,6 +92,7 @@
           volunteer_name: form.elements.volunteer_name.value.trim(),
           volunteer_email: form.elements.volunteer_email.value.trim(),
           week_of: dateInput.value,
+          class_level: form.elements.class_level.value,
           assignment: form.elements.assignment.value.trim(),
           note: form.elements.note.value.trim()
         }
@@ -118,6 +124,7 @@
 
   document.addEventListener("esl:portal-ready", function (event) {
     signedInUser = (event.detail && event.detail.user) || null;
+    window.ESLLevels.fillSelect(form.elements.class_level);
     prefill();
     loadRequests().catch(showError);
   });

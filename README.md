@@ -28,7 +28,6 @@ sent to `login.html` first. After signing in they can open:
 - Curriculum: `curriculum.html`
 - Teacher training video: `teacher-training.html`
 - Tutor training video: `tutor-training.html`
-- Teacher tips: `teacher-tips.html`
 
 ## Connect Supabase
 
@@ -45,7 +44,6 @@ sent to `login.html` first. After signing in they can open:
    - `week_off_requests`
    - `curriculum_items`
    - `training_videos`
-   - `teacher_tips`
 6. Optional videos: upload files under 50 MB to the `volunteer-media`
    bucket, then put the file path in `video_path` or `file_path`.
 

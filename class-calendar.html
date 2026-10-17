@@ -41,14 +41,16 @@
           <div class="portal-heading">
             <div>
               <h2 id="calendar-month">Class Calendar</h2>
-              <p>Class, room, building, and volunteer assignments will appear here when they are provided.</p>
+              <p>Each week shows class assignments and requested days off. Use the level buttons to filter.</p>
             </div>
             <div class="calendar-controls" aria-label="Calendar controls">
-              <button class="portal-button" id="calendar-previous" type="button">Previous</button>
-              <button class="portal-button" id="calendar-today" type="button">Today</button>
-              <button class="portal-button" id="calendar-next" type="button">Next</button>
+              <button class="portal-button" id="calendar-previous" type="button">Previous week</button>
+              <button class="portal-button" id="calendar-today" type="button">This week</button>
+              <button class="portal-button" id="calendar-next" type="button">Next week</button>
             </div>
           </div>
+
+          <div class="level-filters" id="level-filters" aria-label="Filter by class level"></div>
 
           <div class="calendar-shell">
             <div class="calendar-weekdays" aria-hidden="true">
@@ -57,7 +59,7 @@
             </div>
             <div id="class-calendar-grid" class="calendar-grid" role="grid" aria-labelledby="calendar-month"></div>
           </div>
-          <p id="calendar-empty" class="portal-empty" hidden>No classes have been added for this month yet.</p>
+          <p id="calendar-empty" class="portal-empty" hidden>No classes or days off are listed for this week.</p>
         </div>
       </div>
     </div>
@@ -67,6 +69,7 @@
     <div class="footer-bottom">&copy; <span id="year">2026</span> The Shepherd&rsquo;s Church &middot; ESL Ministry</div>
   </footer>
 
+  <script src="assets/js/class-levels.js"></script>
   <script src="assets/js/class-calendar.js"></script>
   <script src="assets/js/portal-common.js"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>

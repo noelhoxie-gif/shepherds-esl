@@ -51,8 +51,11 @@
               <label for="week-off-date">Friday you need off</label>
               <input id="week-off-date" name="week_of" type="date" required />
 
-              <label for="week-off-assignment">Usual class or assignment</label>
-              <input id="week-off-assignment" name="assignment" type="text" maxlength="120" placeholder="Example: Beginner class, Family Center" />
+              <label for="week-off-level">Level you normally teach</label>
+              <select id="week-off-level" name="class_level" required></select>
+
+              <label for="week-off-assignment">Building or other assignment <span>(optional)</span></label>
+              <input id="week-off-assignment" name="assignment" type="text" maxlength="120" placeholder="Example: Family Center" />
 
               <label for="week-off-note">Note for the coordinator <span>(optional)</span></label>
               <textarea id="week-off-note" name="note" rows="4" maxlength="500" placeholder="Add any information that will help with coverage."></textarea>
@@ -76,6 +79,7 @@
     <div class="footer-bottom">&copy; <span id="year">2026</span> The Shepherd&rsquo;s Church &middot; ESL Ministry</div>
   </footer>
 
+  <script src="assets/js/class-levels.js"></script>
   <script src="assets/js/week-off.js"></script>
   <script src="assets/js/portal-common.js"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>

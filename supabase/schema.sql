@@ -181,6 +181,9 @@ create table if not exists public.week_off_requests (
 );
 
 alter table public.week_off_requests add column if not exists volunteer_name text;
+alter table public.week_off_requests add column if not exists class_level text;
+
+alter table public.class_sessions add column if not exists class_level text;
 
 do $$
 begin
@@ -304,20 +307,3 @@ where kind = 'tutor'
   and coalesce(vimeo_id, '') = ''
   and coalesce(video_path, '') = '';
 
-create table if not exists public.teacher_tips (
-  id uuid primary key default gen_random_uuid(),
-  display_order integer not null default 1,
-  title text not null,
-  body text not null,
-  active boolean not null default true,
-  created_at timestamptz not null default now()
-);
-
-alter table public.teacher_tips enable row level security;
-
-drop policy if exists "volunteers_can_read_teacher_tips" on public.teacher_tips;
-create policy "volunteers_can_read_teacher_tips"
-  on public.teacher_tips
-  for select
-  to authenticated
-  using (active = true);

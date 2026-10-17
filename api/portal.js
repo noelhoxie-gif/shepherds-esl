@@ -6,7 +6,6 @@ const ALLOWED = {
   "bible-studies": true,
   curriculum: true,
   training: true,
-  "teacher-tips": true,
   "week-off": true
 };
 
@@ -54,17 +53,30 @@ async function handleGet(resource, query, url, key) {
   if (resource === "class-sessions") {
     const from = query.from || "1900-01-01";
     const to = query.to || "2100-12-31";
-    const rows =
-      (await rest(
-        url,
-        key,
-        "/rest/v1/class_sessions?select=id,session_date,starts_at,class_name,building,room,volunteer_assignment" +
-          "&session_date=gte." +
-          encodeURIComponent(from) +
-          "&session_date=lte." +
-          encodeURIComponent(to) +
-          "&order=session_date.asc,starts_at.asc"
-      )) || [];
+    const range =
+      "&session_date=gte." +
+      encodeURIComponent(from) +
+      "&session_date=lte." +
+      encodeURIComponent(to) +
+      "&order=session_date.asc,starts_at.asc";
+    let rows = [];
+    try {
+      rows =
+        (await rest(
+          url,
+          key,
+          "/rest/v1/class_sessions?select=id,session_date,starts_at,class_name,class_level,building,room,volunteer_assignment" +
+            range
+        )) || [];
+    } catch (err) {
+      rows =
+        (await rest(
+          url,
+          key,
+          "/rest/v1/class_sessions?select=id,session_date,starts_at,class_name,building,room,volunteer_assignment" +
+            range
+        )) || [];
+    }
     return { items: rows };
   }
 
@@ -132,23 +144,23 @@ async function handleGet(resource, query, url, key) {
     };
   }
 
-  if (resource === "teacher-tips") {
-    const rows =
-      (await rest(
-        url,
-        key,
-        "/rest/v1/teacher_tips?select=id,display_order,title,body&active=eq.true&order=display_order.asc"
-      )) || [];
-    return { items: rows };
-  }
-
   if (resource === "week-off") {
-    const rows =
-      (await rest(
-        url,
-        key,
-        "/rest/v1/week_off_requests?select=id,week_of,volunteer_name,assignment,note,status,created_at&order=week_of.desc"
-      )) || [];
+    let rows = [];
+    try {
+      rows =
+        (await rest(
+          url,
+          key,
+          "/rest/v1/week_off_requests?select=id,week_of,volunteer_name,class_level,assignment,note,status,created_at&order=week_of.desc"
+        )) || [];
+    } catch (err) {
+      rows =
+        (await rest(
+          url,
+          key,
+          "/rest/v1/week_off_requests?select=id,week_of,volunteer_name,assignment,note,status,created_at&order=week_of.desc"
+        )) || [];
+    }
     return { items: rows };
   }
 
@@ -160,6 +172,7 @@ async function handleWeekOff(body, url, key) {
     volunteer_name: String((body && body.volunteer_name) || "").trim(),
     volunteer_email: String((body && body.volunteer_email) || "").trim(),
     week_of: String((body && body.week_of) || "").trim(),
+    class_level: String((body && body.class_level) || "").trim() || null,
     assignment: String((body && body.assignment) || "").trim() || null,
     note: String((body && body.note) || "").trim() || null,
     status: "submitted"
@@ -169,18 +182,42 @@ async function handleWeekOff(body, url, key) {
     error.status = 400;
     throw error;
   }
-  const rows = await rest(
-    url,
-    key,
-    "/rest/v1/week_off_requests?on_conflict=volunteer_email,week_of",
-    {
-    method: "POST",
-    headers: {
-      Prefer: "resolution=merge-duplicates,return=representation"
-    },
-    body: payload
-  });
-  return { item: (rows && rows[0]) || payload };
+  if (!payload.class_level) {
+    const error = new Error("Choose the level you normally teach.");
+    error.status = 400;
+    throw error;
+  }
+  try {
+    const rows = await rest(
+      url,
+      key,
+      "/rest/v1/week_off_requests?on_conflict=volunteer_email,week_of",
+      {
+        method: "POST",
+        headers: {
+          Prefer: "resolution=merge-duplicates,return=representation"
+        },
+        body: payload
+      }
+    );
+    return { item: (rows && rows[0]) || payload };
+  } catch (err) {
+    payload.assignment = [payload.class_level, payload.assignment].filter(Boolean).join(" · ");
+    delete payload.class_level;
+    const rows = await rest(
+      url,
+      key,
+      "/rest/v1/week_off_requests?on_conflict=volunteer_email,week_of",
+      {
+        method: "POST",
+        headers: {
+          Prefer: "resolution=merge-duplicates,return=representation"
+        },
+        body: payload
+      }
+    );
+    return { item: (rows && rows[0]) || payload };
+  }
 }
 
 module.exports = async function handler(req, res) {

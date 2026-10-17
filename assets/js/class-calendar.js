@@ -4,9 +4,18 @@
   var grid = document.getElementById("class-calendar-grid");
   var monthLabel = document.getElementById("calendar-month");
   var empty = document.getElementById("calendar-empty");
-  var currentMonth = new Date();
-  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  var filters = document.getElementById("level-filters");
   var sessions = [];
+  var daysOff = [];
+  var selectedLevel = "";
+
+  function startOfWeek(date) {
+    var value = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    value.setDate(value.getDate() - value.getDay());
+    return value;
+  }
+
+  var currentWeek = startOfWeek(new Date());
 
   function dateKey(date) {
     var month = String(date.getMonth() + 1).padStart(2, "0");
@@ -23,81 +32,128 @@
     return hour + ":" + parts[1] + " " + suffix;
   }
 
-  function sessionItem(item) {
+  function itemLevel(item) {
+    return item.class_level || window.ESLLevels.fromText(item.class_name || item.assignment || "");
+  }
+
+  function matchesFilter(level) {
+    return !selectedLevel || level === selectedLevel;
+  }
+
+  function eventEl(options) {
     var entry = document.createElement("div");
-    entry.className = "calendar-event";
+    entry.className = "calendar-event" + (options.off ? " is-off" : "");
+    if (options.level) {
+      entry.classList.add(window.ESLLevels.slug(options.level));
+      entry.setAttribute("data-level", options.level);
+    }
 
     var title = document.createElement("strong");
-    title.textContent = item.class_name;
+    title.textContent = options.title;
     entry.appendChild(title);
 
-    var location = document.createElement("span");
-    location.textContent = [item.building, item.room].filter(Boolean).join(" · ");
-    entry.appendChild(location);
-
-    if (item.starts_at) {
-      var time = document.createElement("span");
-      time.textContent = readableTime(item.starts_at);
-      entry.appendChild(time);
-    }
-
-    if (item.volunteer_assignment) {
-      var assignment = document.createElement("span");
-      assignment.textContent = item.volunteer_assignment;
-      entry.appendChild(assignment);
-    }
-
+    (options.lines || []).forEach(function (line) {
+      if (!line) return;
+      var span = document.createElement("span");
+      span.textContent = line;
+      entry.appendChild(span);
+    });
     return entry;
   }
 
-  function render() {
-    grid.replaceChildren();
-    monthLabel.textContent = currentMonth.toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric"
+  function sessionItem(item) {
+    var level = itemLevel(item);
+    return eventEl({
+      level: level,
+      title: item.class_name || level || "Class",
+      lines: [
+        level ? "Level " + level : "",
+        [item.building, item.room].filter(Boolean).join(" · "),
+        readableTime(item.starts_at),
+        item.volunteer_assignment
+      ]
     });
+  }
 
-    var year = currentMonth.getFullYear();
-    var month = currentMonth.getMonth();
-    var firstWeekday = new Date(year, month, 1).getDay();
-    var daysInMonth = new Date(year, month + 1, 0).getDate();
-    var cellCount = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+  function offItem(item) {
+    var level = itemLevel(item);
+    return eventEl({
+      off: true,
+      level: level,
+      title: "Off · " + (item.volunteer_name || "Volunteer"),
+      lines: [level ? "Level " + level : "", item.assignment, item.note]
+    });
+  }
+
+  function renderFilters() {
+    filters.replaceChildren();
+    var all = document.createElement("button");
+    all.type = "button";
+    all.className = "level-chip" + (selectedLevel ? "" : " is-active");
+    all.textContent = "All levels";
+    all.addEventListener("click", function () {
+      selectedLevel = "";
+      render();
+    });
+    filters.appendChild(all);
+
+    window.ESLLevels.list.forEach(function (level) {
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "level-chip " + window.ESLLevels.slug(level) + (selectedLevel === level ? " is-active" : "");
+      chip.textContent = level;
+      chip.addEventListener("click", function () {
+        selectedLevel = level;
+        render();
+      });
+      filters.appendChild(chip);
+    });
+  }
+
+  function render() {
+    renderFilters();
+    grid.replaceChildren();
+    var sunday = currentWeek;
+    var saturday = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + 6);
+    monthLabel.textContent =
+      "Week of " +
+      sunday.toLocaleDateString("en-US", { month: "long", day: "numeric" }) +
+      " – " +
+      saturday.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
     var hasEvents = false;
-
-    for (var index = 0; index < cellCount; index++) {
-      var dayNumber = index - firstWeekday + 1;
+    for (var offset = 0; offset < 7; offset++) {
+      var date = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + offset);
+      var key = dateKey(date);
       var cell = document.createElement("div");
       cell.className = "calendar-day";
       cell.setAttribute("role", "gridcell");
 
-      if (dayNumber < 1 || dayNumber > daysInMonth) {
-        cell.classList.add("is-outside");
-        grid.appendChild(cell);
-        continue;
-      }
-
-      var date = new Date(year, month, dayNumber);
-      var key = dateKey(date);
       var number = document.createElement("span");
       number.className = "calendar-day-number";
-      number.textContent = dayNumber;
+      number.textContent = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       cell.appendChild(number);
       cell.setAttribute(
         "aria-label",
-        date.toLocaleDateString("en-US", {
-          weekday: "long",
-          month: "long",
-          day: "numeric"
-        })
+        date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
       );
 
       sessions
         .filter(function (item) {
-          return item.session_date === key;
+          return item.session_date === key && matchesFilter(itemLevel(item));
         })
         .forEach(function (item) {
           hasEvents = true;
           cell.appendChild(sessionItem(item));
+        });
+
+      daysOff
+        .filter(function (item) {
+          return item.week_of === key && matchesFilter(itemLevel(item));
+        })
+        .forEach(function (item) {
+          hasEvents = true;
+          cell.appendChild(offItem(item));
         });
 
       grid.appendChild(cell);
@@ -106,48 +162,45 @@
     empty.hidden = hasEvents;
   }
 
-  async function loadMonth() {
-    var year = currentMonth.getFullYear();
-    var month = currentMonth.getMonth();
-    var first = dateKey(new Date(year, month, 1));
-    var last = dateKey(new Date(year, month + 1, 0));
-    var result = await window.ESLPortal.api("class-sessions", {
+  async function loadWeek() {
+    var first = dateKey(currentWeek);
+    var last = dateKey(new Date(currentWeek.getFullYear(), currentWeek.getMonth(), currentWeek.getDate() + 6));
+    var classResult = await window.ESLPortal.api("class-sessions", {
       query: { from: first, to: last }
     });
-    sessions = result.items || [];
+    var offResult = await window.ESLPortal.api("week-off");
+    sessions = classResult.items || [];
+    daysOff = (offResult.items || []).filter(function (item) {
+      return item.week_of >= first && item.week_of <= last;
+    });
     render();
   }
 
-  function changeMonth(offset) {
-    currentMonth = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth() + offset,
-      1
-    );
-    loadMonth().catch(showError);
+  function changeWeek(offset) {
+    currentWeek = new Date(currentWeek.getFullYear(), currentWeek.getMonth(), currentWeek.getDate() + offset * 7);
+    loadWeek().catch(showError);
   }
 
   function showError(error) {
     var message = (error && error.message) || "Could not load the class calendar.";
-    if (/class_sessions/i.test(message)) {
+    if (/class_sessions|week_off/i.test(message)) {
       message = "The class calendar is not set up yet. Run supabase/schema.sql in the Supabase SQL Editor.";
     }
     window.ESLPortal.showMessage(message, true);
   }
 
   document.getElementById("calendar-previous").addEventListener("click", function () {
-    changeMonth(-1);
+    changeWeek(-1);
   });
   document.getElementById("calendar-next").addEventListener("click", function () {
-    changeMonth(1);
+    changeWeek(1);
   });
   document.getElementById("calendar-today").addEventListener("click", function () {
-    var today = new Date();
-    currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    loadMonth().catch(showError);
+    currentWeek = startOfWeek(new Date());
+    loadWeek().catch(showError);
   });
 
   document.addEventListener("esl:portal-ready", function () {
-    loadMonth().catch(showError);
+    loadWeek().catch(showError);
   });
 })();

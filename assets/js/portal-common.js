@@ -17,7 +17,6 @@
     { href: "curriculum.html", label: "Curriculum" },
     { href: "teacher-training.html", label: "Teacher Training" },
     { href: "tutor-training.html", label: "Tutor Training" },
-    { href: "teacher-tips.html", label: "Teacher Tips" },
     { href: "bible-studies.html", label: "Bible Studies" },
     { href: "week-off.html", label: "Week Off" }
   ];
