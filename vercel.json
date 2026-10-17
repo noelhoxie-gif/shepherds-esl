@@ -1,0 +1,15 @@
+{
+  "buildCommand": "node scripts/write-config.js",
+  "rewrites": [
+    { "source": "/volunteer", "destination": "/volunteer.html" },
+    { "source": "/login", "destination": "/login.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(login.html|volunteer.html|login|volunteer)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ]
+}

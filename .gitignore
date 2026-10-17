@@ -1,0 +1,7 @@
+.env
+.env.local
+.env*.local
+assets/js/env.js
+.DS_Store
+node_modules
+.vercel

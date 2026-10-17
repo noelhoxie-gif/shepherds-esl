@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Volunteer Announcements | ESL Ministry</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="assets/images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alata&family=Libre+Franklin:wght@400;600&family=Montserrat:wght@400;600&family=Open+Sans:wght@400;600;700&family=Vollkorn:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#announcements">Skip to announcements</a>
+
+  <header class="site-header">
+    <div class="container header-main">
+      <a class="brand" href="index.html" aria-label="ESL Ministry home">
+        <img src="assets/images/logo-white.png" alt="The Shepherd's Church" width="200" height="70" />
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-program"><small>Volunteer Portal</small>ESL Ministry</span>
+      </a>
+      <nav class="main-nav is-static" aria-label="Main">
+        <ul>
+          <li><span id="volunteer-user" class="nav-user"></span></li>
+          <li><button class="text-button" id="logout-button" type="button">Sign out</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="announcements">
+    <div class="hero page-hero curve-bottom">
+      <div class="container">
+        <p class="hero-eyebrow">Volunteer Portal</p>
+        <h1>Announcements</h1>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="container" style="max-width: 820px">
+        <div class="notice" id="volunteer-setup" hidden></div>
+        <p id="announcement-empty" hidden>There are no announcements yet.</p>
+        <div id="announcement-list" class="announcement-list"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom">&copy; <span id="year">2026</span> The Shepherd&rsquo;s Church &middot; ESL Ministry</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/env.js"></script>
+  <script>window.ESL_CONFIG = window.ESL_CONFIG || { supabaseUrl: "", supabaseAnonKey: "" };</script>
+  <script src="assets/js/supabase-client.js"></script>
+  <script src="assets/js/volunteer.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
