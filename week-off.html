@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Request a Week Off | ESL Ministry</title>
-  <meta name="robots" content="noindex" />
   <link rel="icon" href="assets/images/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,11 +20,8 @@
         <span class="brand-divider" aria-hidden="true"></span>
         <span class="brand-program"><small>Volunteer Portal</small>ESL Ministry</span>
       </a>
-      <nav class="main-nav is-static portal-nav" aria-label="Volunteer portal">
-        <ul>
-          <li><span id="volunteer-user" class="nav-user"></span></li>
-          <li><button class="text-button" id="logout-button" type="button">Sign out</button></li>
-        </ul>
+      <nav class="main-nav is-static portal-nav" aria-label="Volunteer pages">
+        <ul></ul>
       </nav>
     </div>
   </header>
@@ -46,6 +42,12 @@
             <h2>Let the ESL Team Know</h2>
             <p>Select the Friday you will miss so the team can plan class and building assignments.</p>
             <form id="week-off-form" class="portal-form">
+              <label for="week-off-name">Your name</label>
+              <input id="week-off-name" name="volunteer_name" type="text" maxlength="120" required autocomplete="name" />
+
+              <label for="week-off-email">Your email</label>
+              <input id="week-off-email" name="volunteer_email" type="email" required autocomplete="email" />
+
               <label for="week-off-date">Friday you need off</label>
               <input id="week-off-date" name="week_of" type="date" required />
 
@@ -61,8 +63,8 @@
           </div>
 
           <div class="request-history">
-            <h2>Your Requests</h2>
-            <p id="week-off-empty" class="portal-empty" hidden>You have not requested any weeks off.</p>
+            <h2>Requested Weeks Off</h2>
+            <p id="week-off-empty" class="portal-empty" hidden>No week-off requests have been submitted yet.</p>
             <div id="week-off-list" class="announcement-list"></div>
           </div>
         </div>

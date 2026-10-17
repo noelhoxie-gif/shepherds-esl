@@ -6,7 +6,6 @@
   var status = document.getElementById("week-off-status");
   var list = document.getElementById("week-off-list");
   var empty = document.getElementById("week-off-empty");
-  var session;
 
   function formatDate(value) {
     return new Date(value + "T12:00:00").toLocaleDateString("en-US", {
@@ -30,6 +29,11 @@
     heading.textContent = formatDate(request.week_of);
     article.appendChild(heading);
 
+    if (request.volunteer_name) {
+      var name = document.createElement("p");
+      name.textContent = request.volunteer_name;
+      article.appendChild(name);
+    }
     if (request.assignment) {
       var assignment = document.createElement("p");
       assignment.textContent = request.assignment;
@@ -46,8 +50,7 @@
   async function loadRequests() {
     var result = await window.ESL.client()
       .from("week_off_requests")
-      .select("id, week_of, assignment, note, status, created_at")
-      .eq("user_id", session.user.id)
+      .select("id, week_of, volunteer_name, assignment, note, status, created_at")
       .order("week_of", { ascending: false });
 
     if (result.error) throw result.error;
@@ -87,14 +90,14 @@
       .from("week_off_requests")
       .upsert(
         {
-          user_id: session.user.id,
-          volunteer_email: session.user.email || "",
+          volunteer_name: form.elements.volunteer_name.value.trim(),
+          volunteer_email: form.elements.volunteer_email.value.trim(),
           week_of: dateInput.value,
           assignment: form.elements.assignment.value.trim() || null,
           note: form.elements.note.value.trim() || null,
           status: "submitted"
         },
-        { onConflict: "user_id,week_of" }
+        { onConflict: "volunteer_email,week_of" }
       )
       .select()
       .then(function (result) {
@@ -109,8 +112,7 @@
       });
   });
 
-  document.addEventListener("esl:portal-ready", function (event) {
-    session = event.detail.session;
+  document.addEventListener("esl:portal-ready", function () {
     loadRequests().catch(showError);
   });
 })();

@@ -16,7 +16,7 @@ drop policy if exists "volunteers_can_read_published_announcements" on public.an
 create policy "volunteers_can_read_published_announcements"
   on public.announcements
   for select
-  to authenticated
+  to anon, authenticated
   using (published = true);
 
 insert into public.announcements (title, body)
@@ -39,7 +39,7 @@ drop policy if exists "volunteers_can_read_media" on storage.objects;
 create policy "volunteers_can_read_media"
   on storage.objects
   for select
-  to authenticated
+  to anon, authenticated
   using (bucket_id = 'volunteer-media');
 
 -- Class, building, room, and volunteer assignments shown in the portal calendar.
@@ -65,7 +65,7 @@ drop policy if exists "volunteers_can_read_class_sessions" on public.class_sessi
 create policy "volunteers_can_read_class_sessions"
   on public.class_sessions
   for select
-  to authenticated
+  to anon, authenticated
   using (true);
 
 -- The display_order constraint limits the volunteer directory to 10 positions.
@@ -88,14 +88,13 @@ drop policy if exists "volunteers_can_read_bible_studies" on public.bible_studie
 create policy "volunteers_can_read_bible_studies"
   on public.bible_studies
   for select
-  to authenticated
+  to anon, authenticated
   using (active = true);
 
--- Volunteers can submit a request and review or update only their own requests.
--- Coordinators can review all requests from the Supabase Table Editor.
+-- Week-off requests are public so volunteers can see coverage without signing in.
 create table if not exists public.week_off_requests (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
+  volunteer_name text,
   volunteer_email text not null,
   week_of date not null,
   assignment text,
@@ -104,8 +103,28 @@ create table if not exists public.week_off_requests (
     check (status in ('submitted', 'reviewed', 'approved')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (user_id, week_of)
+  unique (volunteer_email, week_of)
 );
+
+alter table public.week_off_requests add column if not exists volunteer_name text;
+
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'week_off_requests'
+      and column_name = 'user_id'
+  ) then
+    alter table public.week_off_requests alter column user_id drop not null;
+    alter table public.week_off_requests drop constraint if exists week_off_requests_user_id_week_of_key;
+    alter table public.week_off_requests drop constraint if exists week_off_requests_user_id_fkey;
+  end if;
+end $$;
+
+create unique index if not exists week_off_requests_email_week_key
+  on public.week_off_requests (volunteer_email, week_of);
 
 create index if not exists week_off_requests_week_of_idx
   on public.week_off_requests (week_of);
@@ -113,28 +132,31 @@ create index if not exists week_off_requests_week_of_idx
 alter table public.week_off_requests enable row level security;
 
 drop policy if exists "volunteers_can_read_own_week_off_requests" on public.week_off_requests;
-create policy "volunteers_can_read_own_week_off_requests"
+drop policy if exists "volunteers_can_submit_week_off_requests" on public.week_off_requests;
+drop policy if exists "volunteers_can_update_own_week_off_requests" on public.week_off_requests;
+drop policy if exists "anyone_can_read_week_off_requests" on public.week_off_requests;
+create policy "anyone_can_read_week_off_requests"
   on public.week_off_requests
   for select
-  to authenticated
-  using (auth.uid() = user_id);
+  to anon, authenticated
+  using (true);
 
-drop policy if exists "volunteers_can_submit_week_off_requests" on public.week_off_requests;
-create policy "volunteers_can_submit_week_off_requests"
+drop policy if exists "anyone_can_submit_week_off_requests" on public.week_off_requests;
+create policy "anyone_can_submit_week_off_requests"
   on public.week_off_requests
   for insert
-  to authenticated
-  with check (auth.uid() = user_id);
+  to anon, authenticated
+  with check (true);
 
-drop policy if exists "volunteers_can_update_own_week_off_requests" on public.week_off_requests;
-create policy "volunteers_can_update_own_week_off_requests"
+drop policy if exists "anyone_can_update_week_off_requests" on public.week_off_requests;
+create policy "anyone_can_update_week_off_requests"
   on public.week_off_requests
   for update
-  to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  to anon, authenticated
+  using (true)
+  with check (true);
 
--- Lesson plans and other class materials for signed-in volunteers.
+-- Lesson plans and other class materials.
 create table if not exists public.curriculum_items (
   id uuid primary key default gen_random_uuid(),
   display_order integer not null default 1,
@@ -152,7 +174,7 @@ drop policy if exists "volunteers_can_read_curriculum_items" on public.curriculu
 create policy "volunteers_can_read_curriculum_items"
   on public.curriculum_items
   for select
-  to authenticated
+  to anon, authenticated
   using (active = true);
 
 -- One teacher training video and one tutor training video.
@@ -172,7 +194,7 @@ drop policy if exists "volunteers_can_read_training_videos" on public.training_v
 create policy "volunteers_can_read_training_videos"
   on public.training_videos
   for select
-  to authenticated
+  to anon, authenticated
   using (true);
 
 insert into public.training_videos (kind, title, description)
@@ -196,5 +218,5 @@ drop policy if exists "volunteers_can_read_teacher_tips" on public.teacher_tips;
 create policy "volunteers_can_read_teacher_tips"
   on public.teacher_tips
   for select
-  to authenticated
+  to anon, authenticated
   using (active = true);

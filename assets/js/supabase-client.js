@@ -43,33 +43,6 @@
     return global.__eslSupabase;
   }
 
-  async function currentSession() {
-    var db = client();
-    if (!db) return null;
-    var result = await db.auth.getSession();
-    if (result.error) throw result.error;
-    return result.data.session;
-  }
-
-  async function signIn(email, password) {
-    var db = client();
-    if (!db) {
-      throw new Error(setupMessage());
-    }
-    var result = await db.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-    if (result.error) throw result.error;
-    return result.data.session;
-  }
-
-  async function signOut() {
-    var db = client();
-    if (!db) return;
-    await db.auth.signOut();
-  }
-
   function setupMessage() {
     var c = config();
     if (isSecretApiKey(c.supabaseAnonKey)) {
@@ -81,9 +54,6 @@
   global.ESL = {
     isConfigured: isConfigured,
     client: client,
-    currentSession: currentSession,
-    signIn: signIn,
-    signOut: signOut,
     setupMessage: setupMessage
   };
 })(window);

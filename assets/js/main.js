@@ -31,20 +31,20 @@
     }
   });
 
-  var loginItem = document.createElement("li");
-  var loginLink = document.createElement("a");
-  loginLink.href = "login.html";
-  loginLink.textContent = "Volunteer Login";
-  loginItem.appendChild(loginLink);
-  navList.appendChild(loginItem);
+  var portalItem = document.createElement("li");
+  var portalLink = document.createElement("a");
+  portalLink.href = "volunteer.html";
+  portalLink.textContent = "Volunteer Pages";
+  portalItem.appendChild(portalLink);
+  navList.appendChild(portalItem);
 
   if (footerList) {
-    var footerLogin = document.createElement("li");
-    var footerLoginLink = document.createElement("a");
-    footerLoginLink.href = "login.html";
-    footerLoginLink.textContent = "Volunteer Login";
-    footerLogin.appendChild(footerLoginLink);
-    footerList.appendChild(footerLogin);
+    var footerPortal = document.createElement("li");
+    var footerPortalLink = document.createElement("a");
+    footerPortalLink.href = "volunteer.html";
+    footerPortalLink.textContent = "Volunteer Pages";
+    footerPortal.appendChild(footerPortalLink);
+    footerList.appendChild(footerPortal);
   }
 
   function showTab(id, focus) {

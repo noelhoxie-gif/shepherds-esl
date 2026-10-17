@@ -3,7 +3,6 @@
   "outputDirectory": "public",
   "rewrites": [
     { "source": "/volunteer", "destination": "/volunteer.html" },
-    { "source": "/login", "destination": "/login.html" },
     { "source": "/class-calendar", "destination": "/class-calendar.html" },
     { "source": "/bible-studies", "destination": "/bible-studies.html" },
     { "source": "/week-off", "destination": "/week-off.html" },
@@ -14,7 +13,7 @@
   ],
   "headers": [
     {
-      "source": "/(login.html|volunteer.html|class-calendar.html|bible-studies.html|week-off.html|curriculum.html|teacher-training.html|tutor-training.html|teacher-tips.html|login|volunteer|class-calendar|bible-studies|week-off|curriculum|teacher-training|tutor-training|teacher-tips)",
+      "source": "/(volunteer.html|class-calendar.html|bible-studies.html|week-off.html|curriculum.html|teacher-training.html|tutor-training.html|teacher-tips.html|volunteer|class-calendar|bible-studies|week-off|curriculum|teacher-training|tutor-training|teacher-tips)",
       "headers": [
         { "key": "Cache-Control", "value": "no-store" }
       ]
