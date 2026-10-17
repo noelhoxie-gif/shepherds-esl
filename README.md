@@ -59,10 +59,20 @@ password). The `/api/auth` function creates the Auth user and profile row,
 then signs them in. They can sign in later with either the username or the
 email.
 
-Anyone who can open the login page can create an account. Keep **Allow new
-users to sign up** turned off in **Authentication → Sign In / Providers**.
-The website still creates users because it uses the server key, not the
-public signup form.
+Anyone who can open the login page can create an account.
+
+The new `sb_secret_` keys are not JWTs, so Auth's admin user API rejects
+them with "This endpoint requires a valid Bearer token." The login page
+creates accounts through `/auth/v1/signup` in that case. In Supabase:
+
+1. **Authentication → Providers → Email**: turn on.
+2. **Allow new users to sign up**: turn on.
+3. **Confirm email**: turn off so volunteers can sign in right away.
+
+If you still have the long JWT `service_role` key (`eyJ...`), you can add
+it in Vercel as `SUPABASE_SERVICE_ROLE_KEY`. Then the site can create
+users with the admin API and auto-confirm them. Keep `SUPABASE_SECRET_KEY`
+for the rest of the volunteer data.
 
 You can also add a volunteer by hand:
 
