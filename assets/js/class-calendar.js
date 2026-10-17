@@ -9,13 +9,15 @@
   var daysOff = [];
   var selectedLevel = "";
 
-  function startOfWeek(date) {
-    var value = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    value.setDate(value.getDate() - value.getDay());
-    return value;
+  function initialMonth() {
+    var param = new URLSearchParams(window.location.search).get("month") || "";
+    var match = param.match(/^(\d{4})-(\d{2})$/);
+    if (match) return new Date(Number(match[1]), Number(match[2]) - 1, 1);
+    var today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
   }
 
-  var currentWeek = startOfWeek(new Date());
+  var currentMonth = initialMonth();
 
   function dateKey(date) {
     var month = String(date.getMonth() + 1).padStart(2, "0");
@@ -113,25 +115,35 @@
   function render() {
     renderFilters();
     grid.replaceChildren();
-    var sunday = currentWeek;
-    var saturday = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + 6);
-    monthLabel.textContent =
-      "Week of " +
-      sunday.toLocaleDateString("en-US", { month: "long", day: "numeric" }) +
-      " – " +
-      saturday.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    monthLabel.textContent = currentMonth.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric"
+    });
 
+    var year = currentMonth.getFullYear();
+    var month = currentMonth.getMonth();
+    var firstWeekday = new Date(year, month, 1).getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var cellCount = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
     var hasEvents = false;
-    for (var offset = 0; offset < 7; offset++) {
-      var date = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + offset);
-      var key = dateKey(date);
+
+    for (var index = 0; index < cellCount; index++) {
+      var dayNumber = index - firstWeekday + 1;
       var cell = document.createElement("div");
       cell.className = "calendar-day";
       cell.setAttribute("role", "gridcell");
 
+      if (dayNumber < 1 || dayNumber > daysInMonth) {
+        cell.classList.add("is-outside");
+        grid.appendChild(cell);
+        continue;
+      }
+
+      var date = new Date(year, month, dayNumber);
+      var key = dateKey(date);
       var number = document.createElement("span");
       number.className = "calendar-day-number";
-      number.textContent = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      number.textContent = dayNumber;
       cell.appendChild(number);
       cell.setAttribute(
         "aria-label",
@@ -162,45 +174,53 @@
     empty.hidden = hasEvents;
   }
 
-  async function loadWeek() {
-    var first = dateKey(currentWeek);
-    var last = dateKey(new Date(currentWeek.getFullYear(), currentWeek.getMonth(), currentWeek.getDate() + 6));
-    var classResult = await window.ESLPortal.api("class-sessions", {
-      query: { from: first, to: last }
-    });
-    var offResult = await window.ESLPortal.api("week-off");
-    sessions = classResult.items || [];
-    daysOff = (offResult.items || []).filter(function (item) {
-      return item.week_of >= first && item.week_of <= last;
+  async function loadMonth() {
+    var year = currentMonth.getFullYear();
+    var month = currentMonth.getMonth();
+    var first = dateKey(new Date(year, month, 1));
+    var last = dateKey(new Date(year, month + 1, 0));
+
+    var results = await Promise.all([
+      window.ESLPortal.api("class-sessions", { query: { from: first, to: last } }).catch(function () {
+        return { items: [] };
+      }),
+      window.ESLPortal.api("week-off")
+    ]);
+    sessions = results[0].items || [];
+    daysOff = (results[1].items || []).filter(function (item) {
+      var day = String(item.week_of || "").slice(0, 10);
+      item.week_of = day;
+      return day >= first && day <= last;
     });
     render();
   }
 
-  function changeWeek(offset) {
-    currentWeek = new Date(currentWeek.getFullYear(), currentWeek.getMonth(), currentWeek.getDate() + offset * 7);
-    loadWeek().catch(showError);
+  function changeMonth(offset) {
+    currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1);
+    loadMonth().catch(showError);
   }
 
   function showError(error) {
-    var message = (error && error.message) || "Could not load the class calendar.";
+    var message = (error && error.message) || "Could not load the calendar.";
     if (/class_sessions|week_off/i.test(message)) {
-      message = "The class calendar is not set up yet. Run supabase/schema.sql in the Supabase SQL Editor.";
+      message = "The calendar is not set up yet. Run supabase/schema.sql in the Supabase SQL Editor.";
     }
     window.ESLPortal.showMessage(message, true);
   }
 
   document.getElementById("calendar-previous").addEventListener("click", function () {
-    changeWeek(-1);
+    changeMonth(-1);
   });
   document.getElementById("calendar-next").addEventListener("click", function () {
-    changeWeek(1);
+    changeMonth(1);
   });
   document.getElementById("calendar-today").addEventListener("click", function () {
-    currentWeek = startOfWeek(new Date());
-    loadWeek().catch(showError);
+    var today = new Date();
+    currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    loadMonth().catch(showError);
   });
 
   document.addEventListener("esl:portal-ready", function () {
-    loadWeek().catch(showError);
+    loadMonth().catch(showError);
   });
 })();

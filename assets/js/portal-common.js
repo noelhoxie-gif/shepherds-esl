@@ -13,7 +13,7 @@
     { href: "volunteer.html", label: "Announcements" },
     { href: "core-values.html", label: "Core Values" },
     { href: "esl-leadership.html", label: "ESL Leadership" },
-    { href: "class-calendar.html", label: "Class Calendar" },
+    { href: "class-calendar.html", label: "Calendar" },
     { href: "curriculum.html", label: "Curriculum" },
     { href: "teacher-training.html", label: "Teacher Training" },
     { href: "tutor-training.html", label: "Tutor Training" },

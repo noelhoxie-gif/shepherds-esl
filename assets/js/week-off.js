@@ -84,6 +84,7 @@
     status.textContent = "Submitting…";
     var submit = form.querySelector('button[type="submit"]');
     submit.disabled = true;
+    var requestedDate = dateInput.value;
 
     window.ESLPortal
       .api("week-off", {
@@ -98,12 +99,11 @@
         }
       })
       .then(function () {
-        status.textContent = "Your week-off request has been submitted.";
-        form.reset();
-        return loadRequests();
+        status.textContent = "Your week-off request has been submitted. Opening the calendar…";
+        window.location.assign("class-calendar.html?month=" + requestedDate.slice(0, 7));
       })
-      .catch(showError)
-      .finally(function () {
+      .catch(function (error) {
+        showError(error);
         submit.disabled = false;
       });
   });
