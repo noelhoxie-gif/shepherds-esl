@@ -21,31 +21,23 @@
   panels.forEach(function (panel) {
     if (panel.hasAttribute("data-hide-from-menu")) return;
     var li = document.createElement("li");
-    li.appendChild(makeLink(panel));
+    var link = makeLink(panel);
+    if (panel.id === "volunteer") {
+      link.href = "volunteer.html";
+    }
+    li.appendChild(link);
     navList.appendChild(li);
 
     if (footerList) {
       var fli = document.createElement("li");
-      fli.appendChild(makeLink(panel));
+      var footerLink = makeLink(panel);
+      if (panel.id === "volunteer") {
+        footerLink.href = "volunteer.html";
+      }
+      fli.appendChild(footerLink);
       footerList.appendChild(fli);
     }
   });
-
-  var portalItem = document.createElement("li");
-  var portalLink = document.createElement("a");
-  portalLink.href = "volunteer.html";
-  portalLink.textContent = "Volunteer Pages";
-  portalItem.appendChild(portalLink);
-  navList.appendChild(portalItem);
-
-  if (footerList) {
-    var footerPortal = document.createElement("li");
-    var footerPortalLink = document.createElement("a");
-    footerPortalLink.href = "volunteer.html";
-    footerPortalLink.textContent = "Volunteer Pages";
-    footerPortal.appendChild(footerPortalLink);
-    footerList.appendChild(footerPortal);
-  }
 
   function showTab(id, focus) {
     var target = document.getElementById(id);
