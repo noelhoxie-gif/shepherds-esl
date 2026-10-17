@@ -1044,6 +1044,53 @@ p { margin: 0 0 1.1em; }
   background: #000;
 }
 
+.table-wrap {
+  overflow-x: auto;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(13, 27, 81, 0.08);
+}
+
+.link-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.link-table th,
+.link-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.link-table th {
+  font-family: var(--font-nav);
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--navy-dark);
+  background: var(--light);
+}
+
+.link-table td:first-child {
+  font-weight: 700;
+  color: var(--navy);
+  width: 4.5em;
+}
+
+.link-table a {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.link-table a:hover {
+  color: var(--gold);
+}
+
+.link-table tr:last-child td {
+  border-bottom: 0;
+}
+
 .portal-heading {
   display: flex;
   justify-content: space-between;
