@@ -25,6 +25,26 @@
     return date.getFullYear() + "-" + month + "-" + day;
   }
 
+  function dayKey(value) {
+    var match = String(value || "").match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : "";
+  }
+
+  function peekPendingOff() {
+    try {
+      var raw = window.sessionStorage.getItem("esl-pending-off");
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function clearPendingOff() {
+    try {
+      window.sessionStorage.removeItem("esl-pending-off");
+    } catch (err) {}
+  }
+
   function readableTime(value) {
     if (!value) return "";
     var parts = value.split(":");
@@ -141,6 +161,7 @@
 
       var date = new Date(year, month, dayNumber);
       var key = dateKey(date);
+      if (date.getDay() === 5) cell.classList.add("is-friday");
       var number = document.createElement("span");
       number.className = "calendar-day-number";
       number.textContent = dayNumber;
@@ -161,7 +182,7 @@
 
       daysOff
         .filter(function (item) {
-          return item.week_of === key && matchesFilter(itemLevel(item));
+          return dayKey(item.week_of) === key && matchesFilter(itemLevel(item));
         })
         .forEach(function (item) {
           hasEvents = true;
@@ -186,11 +207,30 @@
       }),
       window.ESLPortal.api("week-off")
     ]);
-    sessions = results[0].items || [];
-    daysOff = (results[1].items || []).filter(function (item) {
-      var day = String(item.week_of || "").slice(0, 10);
-      item.week_of = day;
-      return day >= first && day <= last;
+    sessions = (results[0].items || []).map(function (item) {
+      item.session_date = dayKey(item.session_date);
+      return item;
+    });
+    daysOff = (results[1].items || []).map(function (item) {
+      item.week_of = dayKey(item.week_of);
+      return item;
+    });
+
+    var pending = peekPendingOff();
+    if (pending && pending.week_of) {
+      pending.week_of = dayKey(pending.week_of);
+      var already = daysOff.some(function (item) {
+        return (
+          item.week_of === pending.week_of &&
+          String(item.volunteer_name || "") === String(pending.volunteer_name || "")
+        );
+      });
+      if (already) clearPendingOff();
+      else daysOff.push(pending);
+    }
+
+    daysOff = daysOff.filter(function (item) {
+      return item.week_of >= first && item.week_of <= last;
     });
     render();
   }

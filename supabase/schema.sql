@@ -233,6 +233,146 @@ create policy "anyone_can_update_week_off_requests"
   using (true)
   with check (true);
 
+-- Server writes with an sb_secret_ key often do not bypass RLS.
+-- These functions run as the table owner so requests actually persist
+-- and every volunteer can see them on the calendar.
+create or replace function public.submit_week_off_request(
+  p_volunteer_name text,
+  p_volunteer_email text,
+  p_week_of date,
+  p_class_level text,
+  p_assignment text,
+  p_note text
+) returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec record;
+  has_class_level boolean;
+begin
+  select exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'week_off_requests'
+      and column_name = 'class_level'
+  ) into has_class_level;
+
+  update public.week_off_requests
+     set volunteer_name = nullif(trim(p_volunteer_name), ''),
+         assignment = case
+           when has_class_level then nullif(trim(p_assignment), '')
+           else nullif(trim(concat_ws(' · ', nullif(trim(p_class_level), ''), nullif(trim(p_assignment), ''))), '')
+         end,
+         note = nullif(trim(p_note), ''),
+         status = 'submitted',
+         updated_at = now()
+   where lower(volunteer_email) = lower(trim(p_volunteer_email))
+     and week_of = p_week_of
+  returning * into rec;
+
+  if rec.id is null then
+    if has_class_level then
+      insert into public.week_off_requests (
+        volunteer_name, volunteer_email, week_of, class_level, assignment, note, status, updated_at
+      )
+      values (
+        nullif(trim(p_volunteer_name), ''),
+        lower(trim(p_volunteer_email)),
+        p_week_of,
+        nullif(trim(p_class_level), ''),
+        nullif(trim(p_assignment), ''),
+        nullif(trim(p_note), ''),
+        'submitted',
+        now()
+      )
+      returning * into rec;
+    else
+      insert into public.week_off_requests (
+        volunteer_name, volunteer_email, week_of, assignment, note, status, updated_at
+      )
+      values (
+        nullif(trim(p_volunteer_name), ''),
+        lower(trim(p_volunteer_email)),
+        p_week_of,
+        nullif(trim(concat_ws(' · ', nullif(trim(p_class_level), ''), nullif(trim(p_assignment), ''))), ''),
+        nullif(trim(p_note), ''),
+        'submitted',
+        now()
+      )
+      returning * into rec;
+    end if;
+  elsif has_class_level then
+    update public.week_off_requests
+       set class_level = nullif(trim(p_class_level), '')
+     where id = rec.id
+    returning * into rec;
+  end if;
+
+  return json_build_object(
+    'id', rec.id,
+    'week_of', rec.week_of,
+    'volunteer_name', rec.volunteer_name,
+    'volunteer_email', rec.volunteer_email,
+    'class_level', case when has_class_level then rec.class_level else nullif(trim(p_class_level), '') end,
+    'assignment', rec.assignment,
+    'note', rec.note,
+    'status', rec.status
+  );
+end;
+$$;
+
+revoke all on function public.submit_week_off_request(text, text, date, text, text, text) from public;
+grant execute on function public.submit_week_off_request(text, text, date, text, text, text)
+  to anon, authenticated, service_role;
+
+create or replace function public.list_week_off_requests()
+returns json
+language plpgsql
+security definer
+stable
+set search_path = public
+as $$
+declare
+  result json;
+  has_class_level boolean;
+begin
+  select exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'week_off_requests'
+      and column_name = 'class_level'
+  ) into has_class_level;
+
+  if has_class_level then
+    select coalesce(json_agg(row_to_json(t)), '[]'::json)
+    into result
+    from (
+      select id, week_of, volunteer_name, volunteer_email, class_level, assignment, note, status, created_at
+      from public.week_off_requests
+      order by week_of desc
+    ) t;
+  else
+    select coalesce(json_agg(row_to_json(t)), '[]'::json)
+    into result
+    from (
+      select id, week_of, volunteer_name, volunteer_email, assignment, note, status, created_at
+      from public.week_off_requests
+      order by week_of desc
+    ) t;
+  end if;
+
+  return result;
+end;
+$$;
+
+revoke all on function public.list_week_off_requests() from public;
+grant execute on function public.list_week_off_requests()
+  to anon, authenticated, service_role;
+
 -- Lesson plans and other class materials.
 create table if not exists public.curriculum_items (
   id uuid primary key default gen_random_uuid(),

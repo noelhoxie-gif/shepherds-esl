@@ -8,12 +8,39 @@
   var empty = document.getElementById("week-off-empty");
 
   function formatDate(value) {
-    return new Date(value + "T12:00:00").toLocaleDateString("en-US", {
+    return new Date(String(value).slice(0, 10) + "T12:00:00").toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",
       year: "numeric"
     });
+  }
+
+  function dateKey(date) {
+    var month = String(date.getMonth() + 1).padStart(2, "0");
+    var day = String(date.getDate()).padStart(2, "0");
+    return date.getFullYear() + "-" + month + "-" + day;
+  }
+
+  function fillFridayOptions() {
+    dateInput.replaceChildren();
+    var placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select a Friday";
+    dateInput.appendChild(placeholder);
+
+    var cursor = new Date();
+    cursor.setHours(12, 0, 0, 0);
+    var daysUntilFriday = (5 - cursor.getDay() + 7) % 7;
+    cursor.setDate(cursor.getDate() + daysUntilFriday);
+
+    for (var i = 0; i < 40; i++) {
+      var option = document.createElement("option");
+      option.value = dateKey(cursor);
+      option.textContent = formatDate(option.value);
+      dateInput.appendChild(option);
+      cursor.setDate(cursor.getDate() + 7);
+    }
   }
 
   function requestCard(request) {
@@ -70,15 +97,6 @@
     );
   }
 
-  dateInput.addEventListener("change", function () {
-    if (!dateInput.value) return;
-    var selected = new Date(dateInput.value + "T12:00:00");
-    dateInput.setCustomValidity(
-      selected.getDay() === 5 ? "" : "Please select the Friday you will miss."
-    );
-    dateInput.reportValidity();
-  });
-
   form.addEventListener("submit", function (event) {
     event.preventDefault();
     status.textContent = "Submitting…";
@@ -98,9 +116,25 @@
           note: form.elements.note.value.trim()
         }
       })
-      .then(function () {
-        status.textContent = "Your week-off request has been submitted. Opening the calendar…";
-        window.location.assign("class-calendar.html?month=" + requestedDate.slice(0, 7));
+      .then(function (result) {
+        var saved = (result && result.item) || {};
+        try {
+          window.sessionStorage.setItem(
+            "esl-pending-off",
+            JSON.stringify({
+              week_of: String(saved.week_of || requestedDate).slice(0, 10),
+              volunteer_name: saved.volunteer_name || form.elements.volunteer_name.value.trim(),
+              volunteer_email: saved.volunteer_email || form.elements.volunteer_email.value.trim(),
+              class_level: saved.class_level || form.elements.class_level.value,
+              assignment: saved.assignment || form.elements.assignment.value.trim(),
+              note: saved.note || form.elements.note.value.trim(),
+              status: saved.status || "submitted"
+            })
+          );
+        } catch (err) {}
+        window.location.assign(
+          "class-calendar.html?month=" + requestedDate.slice(0, 7) + "&off=" + requestedDate
+        );
       })
       .catch(function (error) {
         showError(error);
@@ -125,6 +159,7 @@
   document.addEventListener("esl:portal-ready", function (event) {
     signedInUser = (event.detail && event.detail.user) || null;
     window.ESLLevels.fillSelect(form.elements.class_level);
+    fillFridayOptions();
     prefill();
     loadRequests().catch(showError);
   });
