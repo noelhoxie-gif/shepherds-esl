@@ -17,8 +17,8 @@
     { href: "curriculum.html", label: "Curriculum" },
     { href: "teacher-training.html", label: "Teacher Training" },
     { href: "tutor-training.html", label: "Tutor Training" },
-    { href: "bible-studies.html", label: "Bible Studies" },
-    { href: "week-off.html", label: "Week Off" }
+    { href: "week-off.html", label: "Week Off" },
+    { href: "admin.html", label: "Admin" }
   ];
 
   function showMessage(message, isError) {

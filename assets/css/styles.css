@@ -1375,6 +1375,75 @@ p { margin: 0 0 1.1em; }
   font-weight: 600;
 }
 
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0 28px;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 18px;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
+}
+
+.admin-check input {
+  width: auto;
+}
+
+.admin-inline-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--navy-dark);
+  font-family: var(--font-nav);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.admin-group-title {
+  margin: 28px 0 12px;
+  color: var(--navy-dark);
+}
+
+#panel-requests label {
+  display: block;
+  margin: 12px 0 6px;
+  color: var(--navy-dark);
+  font-family: var(--font-nav);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+#panel-requests select {
+  width: 100%;
+  max-width: 240px;
+  border: 1px solid #cbd0da;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
 .request-history h2 {
   margin-bottom: 24px;
 }
@@ -1550,6 +1619,7 @@ p { margin: 0 0 1.1em; }
   .friday-tile strong { font-size: 28px; }
   .friday-body { grid-template-columns: 1fr; }
   .friday-column + .friday-column { border-left: 0; border-top: 1px solid #e3e6ed; }
+  .admin-form-grid { grid-template-columns: 1fr; }
   .stool-diagram {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto auto;

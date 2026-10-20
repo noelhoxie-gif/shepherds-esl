@@ -17,7 +17,8 @@ fs.mkdirSync(publicDir, { recursive: true });
   "week-off.html",
   "curriculum.html",
   "teacher-training.html",
-  "tutor-training.html"
+  "tutor-training.html",
+  "admin.html"
 ].forEach(function (file) {
   fs.copyFileSync(path.join(root, file), path.join(publicDir, file));
 });

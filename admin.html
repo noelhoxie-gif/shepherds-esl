@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin | ESL Ministry</title>
+  <link rel="icon" href="assets/images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alata&family=Libre+Franklin:wght@400;600&family=Montserrat:wght@400;600&family=Open+Sans:wght@400;600;700&family=Vollkorn:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#admin">Skip to admin</a>
+
+  <header class="site-header">
+    <div class="container header-main">
+      <a class="brand" href="index.html" aria-label="ESL Ministry home">
+        <img src="assets/images/logo-white.png" alt="The Shepherd's Church" width="200" height="70" />
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-program"><small>Volunteer Portal</small>ESL Ministry</span>
+      </a>
+      <nav class="main-nav is-static portal-nav" aria-label="Volunteer pages">
+        <ul></ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="admin">
+    <div class="hero page-hero curve-bottom">
+      <div class="container">
+        <p class="hero-eyebrow">Volunteer Portal</p>
+        <h1>Admin</h1>
+      </div>
+    </div>
+
+    <div class="section section-light">
+      <div class="container">
+        <div class="notice" id="volunteer-setup" hidden></div>
+        <div id="portal-content" hidden>
+          <p>Add announcements, Friday classes, volunteer assignments, and review week-off requests. Changes show on the calendar and volunteer pages right away.</p>
+
+          <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+            <button type="button" class="level-chip is-active" data-panel="announcements">Announcements</button>
+            <button type="button" class="level-chip" data-panel="classes">Classes</button>
+            <button type="button" class="level-chip" data-panel="assignments">Assignments</button>
+            <button type="button" class="level-chip" data-panel="requests">Requests</button>
+          </div>
+
+          <section id="panel-announcements" class="admin-panel">
+            <div class="card request-card">
+              <h2 id="announcement-form-title">New announcement</h2>
+              <form id="announcement-form" class="portal-form">
+                <input type="hidden" name="id" />
+                <label for="announcement-title">Title</label>
+                <input id="announcement-title" name="title" type="text" maxlength="160" required />
+                <label for="announcement-body">Message</label>
+                <textarea id="announcement-body" name="body" rows="5" maxlength="2000" required></textarea>
+                <label class="admin-check">
+                  <input type="checkbox" name="published" checked />
+                  Show this on the Announcements page
+                </label>
+                <div class="admin-actions">
+                  <button class="btn btn-flat" type="submit">Save announcement</button>
+                  <button class="portal-button" id="announcement-cancel" type="button">Clear</button>
+                </div>
+                <p id="announcement-status" class="form-status" role="status"></p>
+              </form>
+            </div>
+            <div id="announcement-admin-list" class="announcement-list"></div>
+          </section>
+
+          <section id="panel-classes" class="admin-panel" hidden>
+            <div class="card request-card">
+              <h2 id="class-form-title">Add a Friday class</h2>
+              <form id="class-form" class="portal-form">
+                <input type="hidden" name="id" />
+                <div class="admin-form-grid">
+                  <div>
+                    <label for="class-date">Friday</label>
+                    <select id="class-date" name="session_date" required></select>
+                  </div>
+                  <div>
+                    <label for="class-time">Start time <span>(optional)</span></label>
+                    <input id="class-time" name="starts_at" type="time" />
+                  </div>
+                  <div>
+                    <label for="class-name">Class name</label>
+                    <input id="class-name" name="class_name" type="text" maxlength="120" required placeholder="Example: Level 1R" />
+                  </div>
+                  <div>
+                    <label for="class-level">Level</label>
+                    <select id="class-level" name="class_level"></select>
+                  </div>
+                  <div>
+                    <label for="class-building">Building <span>(optional)</span></label>
+                    <input id="class-building" name="building" type="text" maxlength="80" placeholder="Example: Family Center" />
+                  </div>
+                  <div>
+                    <label for="class-room">Room <span>(optional)</span></label>
+                    <input id="class-room" name="room" type="text" maxlength="40" />
+                  </div>
+                </div>
+                <label for="class-assignment">Volunteer assignment <span>(optional)</span></label>
+                <input id="class-assignment" name="volunteer_assignment" type="text" maxlength="160" placeholder="Who is teaching or helping" />
+                <label for="class-notes">Notes <span>(optional)</span></label>
+                <textarea id="class-notes" name="notes" rows="2" maxlength="400"></textarea>
+                <div class="admin-actions">
+                  <button class="btn btn-flat" type="submit">Save class</button>
+                  <button class="portal-button" id="class-cancel" type="button">Clear</button>
+                </div>
+                <p id="class-status" class="form-status" role="status"></p>
+              </form>
+            </div>
+
+            <div class="card request-card">
+              <h2>Copy classes to another Friday</h2>
+              <form id="copy-form" class="portal-form admin-form-grid">
+                <div>
+                  <label for="copy-from">Copy from</label>
+                  <select id="copy-from" name="from" required></select>
+                </div>
+                <div>
+                  <label for="copy-to">Copy to</label>
+                  <select id="copy-to" name="to" required></select>
+                </div>
+                <div class="admin-actions">
+                  <button class="btn btn-flat" type="submit">Copy classes</button>
+                </div>
+                <p id="copy-status" class="form-status" role="status"></p>
+              </form>
+            </div>
+            <div id="class-admin-list" class="announcement-list"></div>
+          </section>
+
+          <section id="panel-assignments" class="admin-panel" hidden>
+            <div class="portal-heading">
+              <div>
+                <h2>Assignments</h2>
+                <p>Set who is covering each class for a Friday.</p>
+              </div>
+              <div>
+                <label class="admin-inline-label" for="assignment-friday">Friday</label>
+                <select id="assignment-friday"></select>
+              </div>
+            </div>
+            <p id="assignment-empty" class="portal-empty" hidden>No classes are listed for this Friday yet. Add them under Classes.</p>
+            <div id="assignment-list" class="announcement-list"></div>
+          </section>
+
+          <section id="panel-requests" class="admin-panel" hidden>
+            <h2>Week-off requests</h2>
+            <p id="request-empty" class="portal-empty" hidden>No week-off requests have been submitted yet.</p>
+            <div id="request-admin-list" class="announcement-list"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom">&copy; <span id="year">2026</span> The Shepherd&rsquo;s Church &middot; ESL Ministry</div>
+  </footer>
+
+  <script src="assets/js/class-levels.js"></script>
+  <script src="assets/js/admin.js"></script>
+  <script src="assets/js/portal-common.js"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

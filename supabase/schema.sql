@@ -75,6 +75,28 @@ revoke all on function public.email_for_volunteer_username(text) from public;
 grant execute on function public.email_for_volunteer_username(text)
   to anon, authenticated, service_role;
 
+alter table public.volunteer_profiles add column if not exists is_coordinator boolean not null default false;
+
+-- Mark coordinators in the Table Editor, or set ESL_COORDINATOR_EMAILS in Vercel.
+-- update public.volunteer_profiles set is_coordinator = true where lower(email) = 'you@example.com';
+
+create or replace function public.is_esl_coordinator(p_user_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select coalesce(
+    (select is_coordinator from public.volunteer_profiles where user_id = p_user_id),
+    false
+  );
+$$;
+
+revoke all on function public.is_esl_coordinator(uuid) from public;
+grant execute on function public.is_esl_coordinator(uuid)
+  to anon, authenticated, service_role;
+
 create table if not exists public.announcements (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -371,6 +393,243 @@ $$;
 
 revoke all on function public.list_week_off_requests() from public;
 grant execute on function public.list_week_off_requests()
+  to anon, authenticated, service_role;
+
+create or replace function public.list_announcements_admin()
+returns json
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select coalesce(json_agg(row_to_json(t)), '[]'::json)
+  from (
+    select id, title, body, published, created_at
+    from public.announcements
+    order by created_at desc
+  ) t;
+$$;
+
+revoke all on function public.list_announcements_admin() from public;
+grant execute on function public.list_announcements_admin()
+  to anon, authenticated, service_role;
+
+create or replace function public.save_announcement(
+  p_id uuid,
+  p_title text,
+  p_body text,
+  p_published boolean
+) returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec public.announcements;
+begin
+  if p_id is not null then
+    update public.announcements
+       set title = trim(p_title),
+           body = trim(p_body),
+           published = coalesce(p_published, true)
+     where id = p_id
+    returning * into rec;
+  end if;
+
+  if rec.id is null then
+    insert into public.announcements (title, body, published)
+    values (trim(p_title), trim(p_body), coalesce(p_published, true))
+    returning * into rec;
+  end if;
+
+  return json_build_object(
+    'id', rec.id,
+    'title', rec.title,
+    'body', rec.body,
+    'published', rec.published,
+    'created_at', rec.created_at
+  );
+end;
+$$;
+
+revoke all on function public.save_announcement(uuid, text, text, boolean) from public;
+grant execute on function public.save_announcement(uuid, text, text, boolean)
+  to anon, authenticated, service_role;
+
+create or replace function public.delete_announcement(p_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.announcements where id = p_id;
+$$;
+
+revoke all on function public.delete_announcement(uuid) from public;
+grant execute on function public.delete_announcement(uuid)
+  to anon, authenticated, service_role;
+
+create or replace function public.save_class_session(
+  p_id uuid,
+  p_session_date date,
+  p_starts_at text,
+  p_class_name text,
+  p_class_level text,
+  p_building text,
+  p_room text,
+  p_volunteer_assignment text,
+  p_notes text
+) returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec record;
+  has_class_level boolean;
+  start_time time;
+begin
+  select exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'class_sessions' and column_name = 'class_level'
+  ) into has_class_level;
+
+  begin
+    start_time := nullif(trim(p_starts_at), '')::time;
+  exception when others then
+    start_time := null;
+  end;
+
+  if p_id is not null then
+    if has_class_level then
+      update public.class_sessions
+         set session_date = p_session_date,
+             starts_at = start_time,
+             class_name = trim(p_class_name),
+             class_level = nullif(trim(p_class_level), ''),
+             building = nullif(trim(p_building), ''),
+             room = nullif(trim(p_room), ''),
+             volunteer_assignment = nullif(trim(p_volunteer_assignment), ''),
+             notes = nullif(trim(p_notes), '')
+       where id = p_id
+      returning * into rec;
+    else
+      update public.class_sessions
+         set session_date = p_session_date,
+             starts_at = start_time,
+             class_name = trim(p_class_name),
+             building = nullif(trim(p_building), ''),
+             room = nullif(trim(p_room), ''),
+             volunteer_assignment = nullif(trim(p_volunteer_assignment), ''),
+             notes = nullif(trim(p_notes), '')
+       where id = p_id
+      returning * into rec;
+    end if;
+  end if;
+
+  if rec.id is null then
+    if has_class_level then
+      insert into public.class_sessions (
+        session_date, starts_at, class_name, class_level, building, room, volunteer_assignment, notes
+      )
+      values (
+        p_session_date,
+        start_time,
+        trim(p_class_name),
+        nullif(trim(p_class_level), ''),
+        nullif(trim(p_building), ''),
+        nullif(trim(p_room), ''),
+        nullif(trim(p_volunteer_assignment), ''),
+        nullif(trim(p_notes), '')
+      )
+      returning * into rec;
+    else
+      insert into public.class_sessions (
+        session_date, starts_at, class_name, building, room, volunteer_assignment, notes
+      )
+      values (
+        p_session_date,
+        start_time,
+        trim(p_class_name),
+        nullif(trim(p_building), ''),
+        nullif(trim(p_room), ''),
+        nullif(trim(p_volunteer_assignment), ''),
+        nullif(trim(p_notes), '')
+      )
+      returning * into rec;
+    end if;
+  end if;
+
+  return json_build_object(
+    'id', rec.id,
+    'session_date', rec.session_date,
+    'starts_at', rec.starts_at,
+    'class_name', rec.class_name,
+    'class_level', case when has_class_level then rec.class_level else nullif(trim(p_class_level), '') end,
+    'building', rec.building,
+    'room', rec.room,
+    'volunteer_assignment', rec.volunteer_assignment,
+    'notes', rec.notes
+  );
+end;
+$$;
+
+revoke all on function public.save_class_session(uuid, date, text, text, text, text, text, text, text) from public;
+grant execute on function public.save_class_session(uuid, date, text, text, text, text, text, text, text)
+  to anon, authenticated, service_role;
+
+create or replace function public.delete_class_session(p_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.class_sessions where id = p_id;
+$$;
+
+revoke all on function public.delete_class_session(uuid) from public;
+grant execute on function public.delete_class_session(uuid)
+  to anon, authenticated, service_role;
+
+create or replace function public.update_week_off_status(p_id uuid, p_status text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec record;
+  next_status text;
+begin
+  next_status := lower(trim(p_status));
+  if next_status not in ('submitted', 'reviewed', 'approved') then
+    raise exception 'Status must be submitted, reviewed, or approved.';
+  end if;
+
+  update public.week_off_requests
+     set status = next_status,
+         updated_at = now()
+   where id = p_id
+  returning * into rec;
+
+  if rec.id is null then
+    raise exception 'That week-off request was not found.';
+  end if;
+
+  return json_build_object(
+    'id', rec.id,
+    'week_of', rec.week_of,
+    'volunteer_name', rec.volunteer_name,
+    'volunteer_email', rec.volunteer_email,
+    'assignment', rec.assignment,
+    'note', rec.note,
+    'status', rec.status
+  );
+end;
+$$;
+
+revoke all on function public.update_week_off_status(uuid, text) from public;
+grant execute on function public.update_week_off_status(uuid, text)
   to anon, authenticated, service_role;
 
 -- Lesson plans and other class materials.
