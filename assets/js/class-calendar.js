@@ -3,7 +3,6 @@
 
   var grid = document.getElementById("class-calendar-grid");
   var monthLabel = document.getElementById("calendar-month");
-  var empty = document.getElementById("calendar-empty");
   var filters = document.getElementById("level-filters");
   var sessions = [];
   var daysOff = [];
@@ -132,6 +131,41 @@
     });
   }
 
+  function fridaysInMonth(year, month) {
+    var date = new Date(year, month, 1);
+    date.setDate(1 + ((5 - date.getDay() + 7) % 7));
+    var list = [];
+    while (date.getMonth() === month) {
+      list.push(new Date(date));
+      date.setDate(date.getDate() + 7);
+    }
+    return list;
+  }
+
+  function column(heading, items, emptyText) {
+    var section = document.createElement("div");
+    section.className = "friday-column";
+    var title = document.createElement("h3");
+    title.textContent = heading;
+    var count = document.createElement("span");
+    count.className = "friday-count";
+    count.textContent = items.length;
+    title.appendChild(count);
+    section.appendChild(title);
+
+    if (!items.length) {
+      var none = document.createElement("p");
+      none.className = "friday-none";
+      none.textContent = emptyText;
+      section.appendChild(none);
+    } else {
+      items.forEach(function (el) {
+        section.appendChild(el);
+      });
+    }
+    return section;
+  }
+
   function render() {
     renderFilters();
     grid.replaceChildren();
@@ -140,59 +174,59 @@
       year: "numeric"
     });
 
-    var year = currentMonth.getFullYear();
-    var month = currentMonth.getMonth();
-    var firstWeekday = new Date(year, month, 1).getDay();
-    var daysInMonth = new Date(year, month + 1, 0).getDate();
-    var cellCount = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
-    var hasEvents = false;
-
-    for (var index = 0; index < cellCount; index++) {
-      var dayNumber = index - firstWeekday + 1;
-      var cell = document.createElement("div");
-      cell.className = "calendar-day";
-      cell.setAttribute("role", "gridcell");
-
-      if (dayNumber < 1 || dayNumber > daysInMonth) {
-        cell.classList.add("is-outside");
-        grid.appendChild(cell);
-        continue;
-      }
-
-      var date = new Date(year, month, dayNumber);
+    var todayKey = dateKey(new Date());
+    var fridays = fridaysInMonth(currentMonth.getFullYear(), currentMonth.getMonth());
+    var nextKey = "";
+    fridays.forEach(function (date) {
       var key = dateKey(date);
-      if (date.getDay() === 5) cell.classList.add("is-friday");
-      var number = document.createElement("span");
-      number.className = "calendar-day-number";
-      number.textContent = dayNumber;
-      cell.appendChild(number);
-      cell.setAttribute(
+      if (!nextKey && key >= todayKey) nextKey = key;
+    });
+
+    fridays.forEach(function (date) {
+      var key = dateKey(date);
+      var row = document.createElement("article");
+      row.className = "friday-row";
+      if (key < todayKey) row.classList.add("is-past");
+      if (key === nextKey) row.classList.add("is-next");
+      row.setAttribute(
         "aria-label",
         date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
       );
 
-      sessions
+      var tile = document.createElement("div");
+      tile.className = "friday-tile";
+      var weekday = document.createElement("span");
+      weekday.className = "friday-tile-top";
+      weekday.textContent = key === nextKey ? "Next Friday" : "Friday";
+      var day = document.createElement("strong");
+      day.textContent = date.getDate();
+      var monthName = document.createElement("span");
+      monthName.className = "friday-tile-month";
+      monthName.textContent = date.toLocaleDateString("en-US", { month: "short" });
+      tile.appendChild(weekday);
+      tile.appendChild(day);
+      tile.appendChild(monthName);
+      row.appendChild(tile);
+
+      var classes = sessions
         .filter(function (item) {
           return item.session_date === key && matchesFilter(itemLevel(item));
         })
-        .forEach(function (item) {
-          hasEvents = true;
-          cell.appendChild(sessionItem(item));
-        });
-
-      daysOff
+        .map(sessionItem);
+      var off = daysOff
         .filter(function (item) {
           return dayKey(item.week_of) === key && matchesFilter(itemLevel(item));
         })
-        .forEach(function (item) {
-          hasEvents = true;
-          cell.appendChild(offItem(item));
-        });
+        .map(offItem);
 
-      grid.appendChild(cell);
-    }
+      var body = document.createElement("div");
+      body.className = "friday-body";
+      body.appendChild(column("Classes", classes, "No classes listed yet."));
+      body.appendChild(column("Out this Friday", off, "Everyone is in."));
+      row.appendChild(body);
 
-    empty.hidden = hasEvents;
+      grid.appendChild(row);
+    });
   }
 
   async function loadMonth() {

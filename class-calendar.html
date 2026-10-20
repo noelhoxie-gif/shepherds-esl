@@ -41,7 +41,7 @@
           <div class="portal-heading">
             <div>
               <h2 id="calendar-month">Calendar</h2>
-              <p>Classes and requested days off, color-coded by level. Use the level buttons to filter.</p>
+              <p>ESL meets on Fridays. See each class night and who is out, color-coded by level.</p>
             </div>
             <div class="calendar-controls" aria-label="Calendar controls">
               <button class="portal-button" id="calendar-previous" type="button">Previous month</button>
@@ -52,14 +52,7 @@
 
           <div class="level-filters" id="level-filters" aria-label="Filter by class level"></div>
 
-          <div class="calendar-shell">
-            <div class="calendar-weekdays" aria-hidden="true">
-              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
-              <span>Thu</span><span>Fri</span><span>Sat</span>
-            </div>
-            <div id="class-calendar-grid" class="calendar-grid" role="grid" aria-labelledby="calendar-month"></div>
-          </div>
-          <p id="calendar-empty" class="portal-empty" hidden>No classes or days off are listed for this month.</p>
+          <div id="class-calendar-grid" class="friday-list" aria-labelledby="calendar-month"></div>
         </div>
       </div>
     </div>
