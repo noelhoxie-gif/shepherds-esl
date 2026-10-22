@@ -1145,6 +1145,20 @@ p { margin: 0 0 1.1em; }
   overflow: hidden;
 }
 
+.friday-row.is-clickable {
+  cursor: pointer;
+}
+
+.friday-row.is-clickable:hover,
+.friday-row.is-clickable:focus-visible {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 2px var(--navy), 0 6px 24px rgba(13, 27, 81, 0.12);
+}
+
+.friday-row.is-clickable:focus-visible {
+  outline: none;
+}
+
 .friday-row.is-past {
   opacity: 0.6;
 }
@@ -1190,7 +1204,7 @@ p { margin: 0 0 1.1em; }
 
 .friday-body {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
 }
 
 .friday-column {
@@ -1228,6 +1242,132 @@ p { margin: 0 0 1.1em; }
   margin: 0;
   color: var(--muted);
   font-size: 13px;
+}
+
+.friday-more {
+  margin: 8px 0 0;
+  color: var(--navy);
+  font-family: var(--font-nav);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.attendance-open {
+  overflow: hidden;
+}
+
+.attendance-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(9, 20, 61, 0.62);
+}
+
+.attendance-overlay[hidden] {
+  display: none;
+}
+
+.attendance-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(1120px, 100%);
+  max-height: calc(100vh - 36px);
+  border-radius: 12px;
+  background: var(--white);
+  box-shadow: 0 18px 48px rgba(9, 20, 61, 0.28);
+  overflow: hidden;
+}
+
+.attendance-dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 22px 26px 16px;
+  background: var(--navy-dark);
+  color: var(--white);
+}
+
+.attendance-kicker {
+  margin: 0 0 4px;
+  color: var(--gold);
+  font-family: var(--font-nav);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.attendance-dialog-head h2 {
+  margin: 0;
+  color: var(--white);
+  font-size: 32px;
+}
+
+.attendance-dialog-head p {
+  margin: 6px 0 0;
+}
+
+.attendance-dialog-head .portal-button {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.45);
+  color: var(--white);
+}
+
+.attendance-dialog-head .portal-button:hover,
+.attendance-dialog-head .portal-button:focus-visible {
+  background: var(--white);
+  color: var(--navy-dark);
+}
+
+.attendance-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 18px 22px 24px;
+  overflow: auto;
+}
+
+.attendance-person {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  border: 1px solid #e3e6ed;
+  border-left-width: 6px;
+  border-radius: 8px;
+  background: #f8f9fc;
+}
+
+.attendance-number {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--navy-dark);
+  color: var(--white);
+  font-family: var(--font-nav);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.attendance-person strong {
+  display: block;
+  color: var(--navy-dark);
+  font-size: 18px;
+}
+
+.attendance-person span {
+  display: block;
+  margin-top: 2px;
+  color: var(--text);
+  font-size: 14px;
 }
 
 .calendar-event {
@@ -1288,12 +1428,13 @@ p { margin: 0 0 1.1em; }
 .level-5G { background: #e1f5f0; border-left-color: #0e6655; }
 .level-5 { background: #eceef5; border-left-color: #0d1b51; }
 .level-5C { background: #f8f1d8; border-left-color: #c6a429; }
+.level-H { background: #f2eafa; border-left-color: #74439a; }
 
 .level-chip.level-1R, .level-chip.level-1G, .level-chip.level-1B,
 .level-chip.level-2B, .level-chip.level-2G, .level-chip.level-3R,
 .level-chip.level-3B, .level-chip.level-3G, .level-chip.level-4R,
 .level-chip.level-4B, .level-chip.level-4G, .level-chip.level-5G,
-.level-chip.level-5, .level-chip.level-5C {
+.level-chip.level-5, .level-chip.level-5C, .level-chip.level-H {
   border-left-width: 8px;
   border-left-style: solid;
 }
@@ -1618,8 +1759,10 @@ p { margin: 0 0 1.1em; }
   .friday-tile { flex-direction: row; gap: 10px; padding: 10px; }
   .friday-tile strong { font-size: 28px; }
   .friday-body { grid-template-columns: 1fr; }
-  .friday-column + .friday-column { border-left: 0; border-top: 1px solid #e3e6ed; }
   .admin-form-grid { grid-template-columns: 1fr; }
+  .attendance-list { grid-template-columns: 1fr; }
+  .attendance-dialog-head { flex-direction: column; }
+  .attendance-dialog-head h2 { font-size: 24px; }
   .stool-diagram {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto auto;

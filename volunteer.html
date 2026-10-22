@@ -43,6 +43,18 @@
             <hr class="gold-rule" />
             <p class="tagline">To advance the gospel to the nations in our community while providing English classes.</p>
           </div>
+          <div class="card request-card" id="announcement-composer" hidden>
+            <h2>Add an announcement</h2>
+            <p>This posts to the volunteer Announcements page right away.</p>
+            <form id="announcement-form" class="portal-form">
+              <label for="announcement-title">Title</label>
+              <input id="announcement-title" name="title" type="text" maxlength="160" required />
+              <label for="announcement-body">Message</label>
+              <textarea id="announcement-body" name="body" rows="4" maxlength="2000" required></textarea>
+              <button class="btn btn-flat" type="submit">Post announcement</button>
+              <p id="announcement-status" class="form-status" role="status"></p>
+            </form>
+          </div>
           <p id="announcement-empty" hidden>There are no announcements yet.</p>
           <div id="announcement-list" class="announcement-list"></div>
         </div>

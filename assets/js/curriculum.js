@@ -42,7 +42,7 @@
       .api("curriculum")
       .then(function (data) {
         var items = data.items || [];
-        empty.hidden = items.length > 0;
+        empty.hidden = true;
         list.replaceChildren();
         items.forEach(function (item) {
           list.appendChild(itemCard(item));

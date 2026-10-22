@@ -3,6 +3,8 @@
 
   var list = document.getElementById("announcement-list");
   var empty = document.getElementById("announcement-empty");
+  var form = document.getElementById("announcement-form");
+  var status = document.getElementById("announcement-status");
 
   function card(item) {
     var article = document.createElement("article");
@@ -42,24 +44,58 @@
     return article;
   }
 
-  document.addEventListener("esl:portal-ready", function () {
+  function render(rows) {
+    list.replaceChildren();
+    empty.hidden = rows.length > 0;
+    rows.forEach(function (item) {
+      list.appendChild(card(item));
+    });
+  }
+
+  function loadAnnouncements() {
+    return window.ESLPortal.api("announcements").then(function (data) {
+      render(data.items || []);
+    });
+  }
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    var submit = form.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    status.textContent = "Posting…";
     window.ESLPortal
-      .api("announcements")
-      .then(function (data) {
-        var rows = data.items || [];
-        if (!rows.length) {
-          empty.hidden = false;
-          return;
+      .api("announcements", {
+        method: "POST",
+        body: {
+          title: form.elements.title.value.trim(),
+          body: form.elements.body.value.trim()
         }
-        rows.forEach(function (item) {
-          list.appendChild(card(item));
-        });
+      })
+      .then(function () {
+        form.reset();
+        status.textContent = "Announcement posted.";
+        return loadAnnouncements();
       })
       .catch(function (err) {
+        status.textContent = "";
         window.ESLPortal.showMessage(
-          (err && err.message) || "Could not load announcements.",
+          (err && err.message) || "Could not post the announcement.",
           true
         );
+      })
+      .finally(function () {
+        submit.disabled = false;
       });
+  });
+
+  document.addEventListener("esl:portal-ready", function (event) {
+    var user = (event.detail && event.detail.user) || {};
+    document.getElementById("announcement-composer").hidden = !user.canPostAnnouncements;
+    loadAnnouncements().catch(function (err) {
+      window.ESLPortal.showMessage(
+        (err && err.message) || "Could not load announcements.",
+        true
+      );
+    });
   });
 })();

@@ -41,7 +41,7 @@
           <div class="portal-heading">
             <div>
               <h2 id="calendar-month">Calendar</h2>
-              <p>ESL meets on Fridays. See each class night and who is out, color-coded by level.</p>
+              <p>ESL meets on Fridays. Click a day to see everyone who requested to be out.</p>
             </div>
             <div class="calendar-controls" aria-label="Calendar controls">
               <button class="portal-button" id="calendar-previous" type="button">Previous month</button>
@@ -54,6 +54,20 @@
 
           <div id="class-calendar-grid" class="friday-list" aria-labelledby="calendar-month"></div>
         </div>
+      </div>
+    </div>
+
+    <div id="attendance-overlay" class="attendance-overlay" hidden>
+      <div class="attendance-dialog" role="dialog" aria-modal="true" aria-labelledby="attendance-title">
+        <div class="attendance-dialog-head">
+          <div>
+            <p class="attendance-kicker">Attendance</p>
+            <h2 id="attendance-title">Who is out</h2>
+            <p id="attendance-count"></p>
+          </div>
+          <button class="portal-button" id="attendance-close" type="button">Close</button>
+        </div>
+        <div id="attendance-list" class="attendance-list"></div>
       </div>
     </div>
   </main>

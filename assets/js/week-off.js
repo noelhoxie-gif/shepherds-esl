@@ -63,7 +63,7 @@
     }
     if (request.class_level) {
       var level = document.createElement("p");
-      level.textContent = "Level " + request.class_level;
+      level.textContent = "Area " + request.class_level;
       article.appendChild(level);
     }
     if (request.assignment) {
@@ -158,7 +158,7 @@
 
   document.addEventListener("esl:portal-ready", function (event) {
     signedInUser = (event.detail && event.detail.user) || null;
-    window.ESLLevels.fillSelect(form.elements.class_level);
+    window.ESLLevels.fillSelect(form.elements.class_level, "", "Select an area");
     fillFridayOptions();
     prefill();
     loadRequests().catch(showError);

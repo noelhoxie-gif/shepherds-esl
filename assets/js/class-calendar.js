@@ -4,9 +4,13 @@
   var grid = document.getElementById("class-calendar-grid");
   var monthLabel = document.getElementById("calendar-month");
   var filters = document.getElementById("level-filters");
-  var sessions = [];
+  var overlay = document.getElementById("attendance-overlay");
+  var attendanceList = document.getElementById("attendance-list");
+  var attendanceTitle = document.getElementById("attendance-title");
+  var attendanceCount = document.getElementById("attendance-count");
   var daysOff = [];
   var selectedLevel = "";
+  var lastFocus = null;
 
   function initialMonth() {
     var param = new URLSearchParams(window.location.search).get("month") || "";
@@ -44,15 +48,6 @@
     } catch (err) {}
   }
 
-  function readableTime(value) {
-    if (!value) return "";
-    var parts = value.split(":");
-    var hour = Number(parts[0]);
-    var suffix = hour >= 12 ? "PM" : "AM";
-    hour = hour % 12 || 12;
-    return hour + ":" + parts[1] + " " + suffix;
-  }
-
   function itemLevel(item) {
     return item.class_level || window.ESLLevels.fromText(item.class_name || item.assignment || "");
   }
@@ -82,27 +77,13 @@
     return entry;
   }
 
-  function sessionItem(item) {
-    var level = itemLevel(item);
-    return eventEl({
-      level: level,
-      title: item.class_name || level || "Class",
-      lines: [
-        level ? "Level " + level : "",
-        [item.building, item.room].filter(Boolean).join(" · "),
-        readableTime(item.starts_at),
-        item.volunteer_assignment
-      ]
-    });
-  }
-
   function offItem(item) {
     var level = itemLevel(item);
     return eventEl({
       off: true,
       level: level,
       title: "Off · " + (item.volunteer_name || "Volunteer"),
-      lines: [level ? "Level " + level : "", item.assignment, item.note]
+      lines: [level ? "Area " + level : "", item.assignment, item.note]
     });
   }
 
@@ -142,7 +123,7 @@
     return list;
   }
 
-  function column(heading, items, emptyText) {
+  function column(heading, items, emptyText, extra) {
     var section = document.createElement("div");
     section.className = "friday-column";
     var title = document.createElement("h3");
@@ -159,11 +140,94 @@
       none.textContent = emptyText;
       section.appendChild(none);
     } else {
-      items.forEach(function (el) {
+      items.slice(0, 4).forEach(function (el) {
         section.appendChild(el);
       });
+      if (items.length > 4) {
+        var more = document.createElement("p");
+        more.className = "friday-more";
+        more.textContent = "+" + (items.length - 4) + " more · View full list";
+        section.appendChild(more);
+      }
     }
+    if (extra) section.appendChild(extra);
     return section;
+  }
+
+  function peopleOff(key) {
+    return daysOff
+      .filter(function (item) {
+        return dayKey(item.week_of) === key;
+      })
+      .slice()
+      .sort(function (a, b) {
+        var nameA = String(a.volunteer_name || "").toLowerCase();
+        var nameB = String(b.volunteer_name || "").toLowerCase();
+        if (nameA !== nameB) return nameA < nameB ? -1 : 1;
+        return String(itemLevel(a)).localeCompare(String(itemLevel(b)));
+      });
+  }
+
+  function openAttendance(key, date) {
+    var people = peopleOff(key);
+    lastFocus = document.activeElement;
+    attendanceTitle.textContent = date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric"
+    });
+    attendanceCount.textContent =
+      people.length === 1
+        ? "1 volunteer is out"
+        : people.length + " volunteers are out";
+
+    attendanceList.replaceChildren();
+    if (!people.length) {
+      var empty = document.createElement("p");
+      empty.className = "portal-empty";
+      empty.textContent = "Everyone is in this Friday.";
+      attendanceList.appendChild(empty);
+    } else {
+      people.forEach(function (item, index) {
+        var row = document.createElement("article");
+        row.className = "attendance-person";
+        var level = itemLevel(item);
+        if (level) row.classList.add(window.ESLLevels.slug(level));
+
+        var number = document.createElement("span");
+        number.className = "attendance-number";
+        number.textContent = String(index + 1);
+        row.appendChild(number);
+
+        var body = document.createElement("div");
+        var name = document.createElement("strong");
+        name.textContent = item.volunteer_name || "Volunteer";
+        body.appendChild(name);
+
+        var meta = document.createElement("span");
+        meta.textContent = [
+          level ? "Area " + level : "",
+          item.assignment,
+          item.note
+        ]
+          .filter(Boolean)
+          .join(" · ");
+        if (meta.textContent) body.appendChild(meta);
+        row.appendChild(body);
+        attendanceList.appendChild(row);
+      });
+    }
+
+    overlay.hidden = false;
+    document.body.classList.add("attendance-open");
+    document.getElementById("attendance-close").focus();
+  }
+
+  function closeAttendance() {
+    overlay.hidden = true;
+    document.body.classList.remove("attendance-open");
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
 
   function render() {
@@ -185,13 +249,25 @@
     fridays.forEach(function (date) {
       var key = dateKey(date);
       var row = document.createElement("article");
-      row.className = "friday-row";
+      row.className = "friday-row is-clickable";
       if (key < todayKey) row.classList.add("is-past");
       if (key === nextKey) row.classList.add("is-next");
+      row.setAttribute("role", "button");
+      row.setAttribute("tabindex", "0");
       row.setAttribute(
         "aria-label",
-        date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+        "Open attendance for " +
+          date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
       );
+      row.addEventListener("click", function () {
+        openAttendance(key, date);
+      });
+      row.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openAttendance(key, date);
+        }
+      });
 
       var tile = document.createElement("div");
       tile.className = "friday-tile";
@@ -208,21 +284,18 @@
       tile.appendChild(monthName);
       row.appendChild(tile);
 
-      var classes = sessions
-        .filter(function (item) {
-          return item.session_date === key && matchesFilter(itemLevel(item));
-        })
-        .map(sessionItem);
-      var off = daysOff
-        .filter(function (item) {
-          return dayKey(item.week_of) === key && matchesFilter(itemLevel(item));
-        })
-        .map(offItem);
+      var offPeople = peopleOff(key).filter(function (item) {
+        return matchesFilter(itemLevel(item));
+      });
+      var hint = document.createElement("p");
+      hint.className = "friday-more";
+      hint.textContent = "Click to open the full attendance list";
 
       var body = document.createElement("div");
       body.className = "friday-body";
-      body.appendChild(column("Classes", classes, "No classes listed yet."));
-      body.appendChild(column("Out this Friday", off, "Everyone is in."));
+      body.appendChild(
+        column("Out this Friday", offPeople.map(offItem), "Everyone is in.", hint)
+      );
       row.appendChild(body);
 
       grid.appendChild(row);
@@ -235,17 +308,8 @@
     var first = dateKey(new Date(year, month, 1));
     var last = dateKey(new Date(year, month + 1, 0));
 
-    var results = await Promise.all([
-      window.ESLPortal.api("class-sessions", { query: { from: first, to: last } }).catch(function () {
-        return { items: [] };
-      }),
-      window.ESLPortal.api("week-off")
-    ]);
-    sessions = (results[0].items || []).map(function (item) {
-      item.session_date = dayKey(item.session_date);
-      return item;
-    });
-    daysOff = (results[1].items || []).map(function (item) {
+    var result = await window.ESLPortal.api("week-off");
+    daysOff = (result.items || []).map(function (item) {
       item.week_of = dayKey(item.week_of);
       return item;
     });
@@ -267,6 +331,15 @@
       return item.week_of >= first && item.week_of <= last;
     });
     render();
+
+    var offParam = new URLSearchParams(window.location.search).get("off") || "";
+    var offDay = dayKey(offParam);
+    if (offDay) {
+      var matchDate = fridaysInMonth(year, month).find(function (date) {
+        return dateKey(date) === offDay;
+      });
+      if (matchDate) openAttendance(offDay, matchDate);
+    }
   }
 
   function changeMonth(offset) {
@@ -292,6 +365,14 @@
     var today = new Date();
     currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     loadMonth().catch(showError);
+  });
+
+  document.getElementById("attendance-close").addEventListener("click", closeAttendance);
+  overlay.addEventListener("click", function (event) {
+    if (event.target === overlay) closeAttendance();
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !overlay.hidden) closeAttendance();
   });
 
   document.addEventListener("esl:portal-ready", function () {
