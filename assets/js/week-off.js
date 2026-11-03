@@ -97,10 +97,10 @@
     );
   }
 
-  function attendanceNotifyEmails() {
-    var configured = window.ESL_NOTIFY && window.ESL_NOTIFY.emails;
-    if (configured && configured.length) return configured;
-    return ["larryphoxie@gmail.com", "noel.hoxie@gmail.com"];
+  function attendanceNotifyEmails(prayerChain) {
+    var emails = ["larryphoxie@gmail.com"];
+    if (prayerChain) emails.push("noel.hoxie@gmail.com");
+    return emails;
   }
 
   function sendAttendanceEmail(item) {
@@ -114,6 +114,7 @@
       "Area: " + (item.class_level || ""),
       "Assignment: " + (item.assignment || ""),
       "Note: " + (item.note || ""),
+      "Prayer chain: " + (item.prayer_chain ? "Yes" : "No"),
       "Status: " + (item.status || "submitted")
     ].join("\n");
     var subject = "ESL attendance request: " + (item.volunteer_name || "volunteer") + " · " + friday;
@@ -129,9 +130,10 @@
     body.set("area", item.class_level || "");
     body.set("assignment", item.assignment || "");
     body.set("note", item.note || "");
+    body.set("prayer_chain", item.prayer_chain ? "Yes" : "No");
     body.set("message", text);
     return Promise.all(
-      attendanceNotifyEmails().map(function (to) {
+      attendanceNotifyEmails(item.prayer_chain).map(function (to) {
         return fetch("https://flowform.to/" + encodeURIComponent(to), {
           method: "POST",
           headers: {
@@ -169,11 +171,16 @@
           week_of: dateInput.value,
           class_level: form.elements.class_level.value,
           assignment: form.elements.assignment.value.trim(),
-          note: form.elements.note.value.trim()
+          note: form.elements.note.value.trim(),
+          prayer_chain: Boolean(form.elements.prayer_chain && form.elements.prayer_chain.checked)
         }
       })
       .then(function (result) {
         var saved = (result && result.item) || {};
+        var prayerChain = Boolean(
+          saved.prayer_chain ||
+            (form.elements.prayer_chain && form.elements.prayer_chain.checked)
+        );
         var pending = {
           week_of: String(saved.week_of || requestedDate).slice(0, 10),
           volunteer_name: saved.volunteer_name || form.elements.volunteer_name.value.trim(),
@@ -181,6 +188,7 @@
           class_level: saved.class_level || form.elements.class_level.value,
           assignment: saved.assignment || form.elements.assignment.value.trim(),
           note: saved.note || form.elements.note.value.trim(),
+          prayer_chain: prayerChain,
           status: saved.status || "submitted"
         };
         try {

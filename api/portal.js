@@ -317,8 +317,10 @@ async function handleWeekOff(body, url, key, req) {
     error.status = 500;
     throw error;
   }
-  const notify = await notifyAttendance(confirmed || saved, req);
-  return { item: confirmed || saved, items: items, notify: notify };
+  const prayerChain = isPrayerChain(body && body.prayer_chain);
+  const notifyItem = Object.assign({}, confirmed || saved, { prayer_chain: prayerChain });
+  const notify = await notifyAttendance(notifyItem, req);
+  return { item: notifyItem, items: items, notify: notify };
 }
 
 function formatFriday(value) {
@@ -332,15 +334,14 @@ function formatFriday(value) {
   });
 }
 
-function attendanceNotifyEmails() {
-  const fromEnv = String(process.env.ATTENDANCE_NOTIFY_EMAIL || "")
-    .split(",")
-    .map(function (email) {
-      return email.trim();
-    })
-    .filter(Boolean);
-  if (fromEnv.length) return fromEnv;
-  return ["larryphoxie@gmail.com", "noel.hoxie@gmail.com"];
+function isPrayerChain(value) {
+  return value === true || value === "true" || value === "on" || value === "Yes" || value === "yes";
+}
+
+function attendanceNotifyEmails(prayerChain) {
+  const emails = ["larryphoxie@gmail.com"];
+  if (prayerChain) emails.push("noel.hoxie@gmail.com");
+  return emails;
 }
 
 function siteOrigin(req) {
@@ -364,7 +365,8 @@ function fetchWithTimeout(url, options, ms) {
 }
 
 async function notifyAttendance(item, req) {
-  const recipients = attendanceNotifyEmails();
+  const prayerChain = isPrayerChain(item && item.prayer_chain);
+  const recipients = attendanceNotifyEmails(prayerChain);
   const friday = formatFriday(item && item.week_of);
   const lines = [
     "A volunteer submitted an attendance / week-off request.",
@@ -375,6 +377,7 @@ async function notifyAttendance(item, req) {
     "Area: " + (item.class_level || ""),
     "Assignment: " + (item.assignment || ""),
     "Note: " + (item.note || ""),
+    "Prayer chain: " + (prayerChain ? "Yes" : "No"),
     "Status: " + (item.status || "submitted")
   ];
   const text = lines.join("\n");
@@ -414,6 +417,7 @@ async function notifyAttendance(item, req) {
     formBody.set("area", item.class_level || "");
     formBody.set("assignment", item.assignment || "");
     formBody.set("note", item.note || "");
+    formBody.set("prayer_chain", prayerChain ? "Yes" : "No");
     formBody.set("message", text);
     const results = await Promise.all(
       recipients.map(function (to) {

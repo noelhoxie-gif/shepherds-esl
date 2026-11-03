@@ -1494,6 +1494,33 @@ body.attendance-open {
   font: inherit;
 }
 
+.portal-form .portal-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.portal-form .portal-check input {
+  width: auto;
+  margin-top: 3px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  accent-color: var(--navy);
+}
+
+.portal-form .portal-check span {
+  color: var(--navy-dark);
+  font-weight: 400;
+}
+
 .portal-form input:focus,
 .portal-form textarea:focus {
   outline: 2px solid var(--navy);
