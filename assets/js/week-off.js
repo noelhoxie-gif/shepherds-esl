@@ -123,7 +123,6 @@
     var web3Key = window.ESL_NOTIFY && window.ESL_NOTIFY.web3formsKey;
     var task;
     if (web3Key) {
-      var emails = attendanceNotifyEmails();
       task = fetch("https://api.web3forms.com/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -133,7 +132,6 @@
           from_name: "ESL Attendance",
           name: item.volunteer_name || "",
           email: item.volunteer_email || "",
-          ccemail: emails.filter(function (to) { return to !== emails[0]; }).join(","),
           friday: friday,
           area: item.class_level || "",
           assignment: item.assignment || "",
