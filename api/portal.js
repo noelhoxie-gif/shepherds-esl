@@ -340,7 +340,7 @@ function attendanceNotifyEmails() {
     })
     .filter(Boolean);
   if (fromEnv.length) return fromEnv;
-  return ["larryphoxie@gmail.com"];
+  return ["larryphoxie@gmail.com", "noel.hoxie@gmail.com"];
 }
 
 function siteOrigin(req) {

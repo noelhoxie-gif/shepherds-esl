@@ -100,7 +100,7 @@
   function attendanceNotifyEmails() {
     var configured = window.ESL_NOTIFY && window.ESL_NOTIFY.emails;
     if (configured && configured.length) return configured;
-    return ["larryphoxie@gmail.com"];
+    return ["larryphoxie@gmail.com", "noel.hoxie@gmail.com"];
   }
 
   function sendAttendanceEmail(item) {
