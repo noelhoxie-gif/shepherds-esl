@@ -317,7 +317,93 @@ async function handleWeekOff(body, url, key, req) {
     error.status = 500;
     throw error;
   }
+  await notifyAttendance(confirmed || saved);
   return { item: confirmed || saved, items: items };
+}
+
+function formatFriday(value) {
+  const day = dayKey(value);
+  if (!day) return String(value || "");
+  return new Date(day + "T12:00:00").toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function attendanceNotifyEmails() {
+  const fromEnv = String(process.env.ATTENDANCE_NOTIFY_EMAIL || "")
+    .split(",")
+    .map(function (email) {
+      return email.trim();
+    })
+    .filter(Boolean);
+  if (fromEnv.length) return fromEnv;
+  return ["noel.hoxie@gmail.com", "larryphoxie@gmail.com"];
+}
+
+async function notifyAttendance(item) {
+  const recipients = attendanceNotifyEmails();
+  const friday = formatFriday(item && item.week_of);
+  const lines = [
+    "A volunteer submitted an attendance / week-off request.",
+    "",
+    "Name: " + (item.volunteer_name || ""),
+    "Email: " + (item.volunteer_email || ""),
+    "Friday: " + friday,
+    "Area: " + (item.class_level || ""),
+    "Assignment: " + (item.assignment || ""),
+    "Note: " + (item.note || ""),
+    "Status: " + (item.status || "submitted")
+  ];
+  const text = lines.join("\n");
+  const subject = "ESL attendance request: " + (item.volunteer_name || "volunteer") + " · " + friday;
+
+  try {
+    const resendKey = process.env.RESEND_API_KEY;
+    if (resendKey) {
+      const from = process.env.ATTENDANCE_FROM_EMAIL || "ESL Ministry <noreply@eslclassescary.com>";
+      const result = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + resendKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          from: from,
+          to: recipients,
+          subject: subject,
+          text: text
+        })
+      });
+      if (result.ok) return;
+    }
+
+    await Promise.all(
+      recipients.map(function (to) {
+        return fetch("https://formsubmit.co/ajax/" + encodeURIComponent(to), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
+          body: JSON.stringify({
+            _subject: subject,
+            name: item.volunteer_name || "",
+            email: item.volunteer_email || "",
+            friday: friday,
+            area: item.class_level || "",
+            assignment: item.assignment || "",
+            note: item.note || "",
+            message: text
+          })
+        });
+      })
+    );
+  } catch (err) {
+    // The request is already saved; do not fail the volunteer submission.
+  }
 }
 
 async function handleAnnouncementPost(body, url, key) {
