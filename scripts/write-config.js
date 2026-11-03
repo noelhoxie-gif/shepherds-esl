@@ -27,7 +27,7 @@ fs.cpSync(path.join(root, "assets"), path.join(publicDir, "assets"), {
 const DEFAULT_WEB3FORMS_KEY = "61fc4699-58c5-4d9f-94b0-0f013fa44cc4";
 const notify = {
   web3formsKey: String(process.env.WEB3FORMS_ACCESS_KEY || DEFAULT_WEB3FORMS_KEY).trim(),
-  emails: ["larryphoxie@gmail.com", "noel.hoxie@gmail.com"]
+  emails: ["laurareakesl@gmail.com", "sonnieryder25@hotmail.com"]
 };
 const notifyJs = "window.ESL_NOTIFY = " + JSON.stringify(notify) + ";\n";
 fs.writeFileSync(path.join(publicDir, "assets/js/notify-config.js"), notifyJs);

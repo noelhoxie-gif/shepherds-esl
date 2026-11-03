@@ -339,8 +339,8 @@ function isPrayerChain(value) {
 }
 
 function attendanceNotifyEmails(prayerChain) {
-  const emails = ["larryphoxie@gmail.com"];
-  if (prayerChain) emails.push("noel.hoxie@gmail.com");
+  const emails = ["laurareakesl@gmail.com"];
+  if (prayerChain) emails.push("sonnieryder25@hotmail.com");
   return emails;
 }
 

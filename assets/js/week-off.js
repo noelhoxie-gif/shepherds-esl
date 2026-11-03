@@ -98,8 +98,8 @@
   }
 
   function attendanceNotifyEmails(prayerChain) {
-    var emails = ["larryphoxie@gmail.com"];
-    if (prayerChain) emails.push("noel.hoxie@gmail.com");
+    var emails = ["laurareakesl@gmail.com"];
+    if (prayerChain) emails.push("sonnieryder25@hotmail.com");
     return emails;
   }
 
