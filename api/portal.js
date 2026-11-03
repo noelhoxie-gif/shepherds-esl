@@ -405,46 +405,44 @@ async function notifyAttendance(item, req) {
       console.error("attendance-email resend failed", result.status, errText.slice(0, 300));
     }
 
-    const originHeaders = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Origin: origin,
-      Referer: origin + "/week-off.html"
-    };
+    const formBody = new URLSearchParams();
+    formBody.set("_subject", subject);
+    formBody.set("_replyto", item.volunteer_email || "");
+    formBody.set("name", item.volunteer_name || "");
+    formBody.set("email", item.volunteer_email || "");
+    formBody.set("friday", friday);
+    formBody.set("area", item.class_level || "");
+    formBody.set("assignment", item.assignment || "");
+    formBody.set("note", item.note || "");
+    formBody.set("message", text);
     const results = await Promise.all(
       recipients.map(function (to) {
-        return fetchWithTimeout("https://formsubmit.co/ajax/" + encodeURIComponent(to), {
+        return fetchWithTimeout("https://flowform.to/" + encodeURIComponent(to), {
           method: "POST",
-          headers: originHeaders,
-          body: JSON.stringify({
-            _subject: subject,
-            _captcha: "false",
-            _template: "table",
-            name: item.volunteer_name || "",
-            email: item.volunteer_email || "",
-            friday: friday,
-            area: item.class_level || "",
-            assignment: item.assignment || "",
-            note: item.note || "",
-            message: text
-          })
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            Origin: origin,
+            Referer: origin + "/week-off.html"
+          },
+          body: formBody.toString()
         })
           .then(async function (result) {
             const body = await result.text().catch(function () {
               return "";
             });
-            const ok = result.ok && !/522|521|error code/i.test(body) && /success|true|ok/i.test(body);
-            if (!ok) console.error("attendance-email formsubmit failed", to, result.status, body.slice(0, 200));
+            const ok = result.ok && /"success"\s*:\s*true/i.test(body);
+            if (!ok) console.error("attendance-email flowform failed", to, result.status, body.slice(0, 200));
             return ok;
           })
           .catch(function (err) {
-            console.error("attendance-email formsubmit error", to, err && err.message);
+            console.error("attendance-email flowform error", to, err && err.message);
             return false;
           });
       })
     );
     const sent = results.filter(Boolean).length;
-    return { ok: sent === recipients.length, via: "formsubmit", sent: sent };
+    return { ok: sent === recipients.length, via: "flowform", sent: sent };
   } catch (err) {
     console.error("attendance-email error", err && err.message);
     return { ok: false, error: (err && err.message) || "email failed" };

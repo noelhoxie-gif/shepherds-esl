@@ -118,65 +118,37 @@
     ].join("\n");
     var subject = "ESL attendance request: " + (item.volunteer_name || "volunteer") + " · " + friday;
     var controller = typeof AbortController === "function" ? new AbortController() : null;
-    var timer = controller ? setTimeout(function () { controller.abort(); }, 6000) : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, 8000) : null;
     var signal = controller ? controller.signal : undefined;
-    var web3Key = window.ESL_NOTIFY && window.ESL_NOTIFY.web3formsKey;
-    var task;
-    if (web3Key) {
-      task = fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          access_key: web3Key,
-          subject: subject,
-          from_name: "ESL Attendance",
-          name: item.volunteer_name || "",
-          email: item.volunteer_email || "",
-          friday: friday,
-          area: item.class_level || "",
-          assignment: item.assignment || "",
-          note: item.note || "",
-          message: text
-        }),
-        signal: signal
-      }).then(function (response) {
-        return response.json().then(function (body) {
-          if (!response.ok || !body || body.success === false) {
-            throw new Error((body && body.message) || "Attendance email was not accepted.");
-          }
-        });
-      });
-    } else {
-      var payload = {
-        _subject: subject,
-        _captcha: "false",
-        _template: "table",
-        name: item.volunteer_name || "",
-        email: item.volunteer_email || "",
-        friday: friday,
-        area: item.class_level || "",
-        assignment: item.assignment || "",
-        note: item.note || "",
-        message: text
-      };
-      task = Promise.all(
-        attendanceNotifyEmails().map(function (to) {
-          return fetch("https://formsubmit.co/ajax/" + encodeURIComponent(to), {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify(payload),
-            signal: signal
-          }).then(function (response) {
-            return response.text().then(function (body) {
-              if (!response.ok || /522|521|error code/i.test(body)) {
-                throw new Error("Attendance email was not accepted.");
-              }
-            });
+    var body = new URLSearchParams();
+    body.set("_subject", subject);
+    body.set("_replyto", item.volunteer_email || "");
+    body.set("name", item.volunteer_name || "");
+    body.set("email", item.volunteer_email || "");
+    body.set("friday", friday);
+    body.set("area", item.class_level || "");
+    body.set("assignment", item.assignment || "");
+    body.set("note", item.note || "");
+    body.set("message", text);
+    return Promise.all(
+      attendanceNotifyEmails().map(function (to) {
+        return fetch("https://flowform.to/" + encodeURIComponent(to), {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: body.toString(),
+          signal: signal
+        }).then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok || !data || data.success === false) {
+              throw new Error((data && data.message) || "Attendance email was not accepted.");
+            }
           });
-        })
-      );
-    }
-    return task.finally(function () {
+        });
+      })
+    ).finally(function () {
       if (timer) clearTimeout(timer);
     });
   }
