@@ -72,17 +72,37 @@
     button.textContent = busy ? busyLabel : idleLabel;
   }
 
+  function authError(error) {
+    var message = (error && error.message) || "";
+    if (/failed to fetch|fetch failed|load failed|networkerror|network error/i.test(message)) {
+      return "Could not reach volunteer login. Refresh and try again, using https://www.eslclassescary.com.";
+    }
+    return message || "Could not complete the request.";
+  }
+
   function postAuth(action, body) {
-    return fetch("/api/auth?action=" + action, {
+    return fetch("/api/auth?action=" + encodeURIComponent(action), {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: JSON.stringify(body)
-    }).then(function (result) {
-      return result.json().then(function (data) {
-        if (!result.ok) throw new Error(data.error || "Could not complete the request.");
-        return data;
+    })
+      .then(function (result) {
+        return result.text().then(function (text) {
+          var data = {};
+          if (text) {
+            try {
+              data = JSON.parse(text);
+            } catch (err) {
+              data = {};
+            }
+          }
+          if (!result.ok) throw new Error(data.error || "Could not complete the request.");
+          return data;
+        });
+      })
+      .catch(function (error) {
+        throw new Error(authError(error));
       });
-    });
   }
 
   function showPanel(name) {
@@ -151,7 +171,7 @@
         window.location.replace(nextPage());
       })
       .catch(function (error) {
-        showError((error && error.message) || "Could not sign in.");
+        showError(authError(error) || "Could not sign in.");
         setBusy(loginSubmit, false, "Sign in", "Signing in…");
       });
   });

@@ -92,11 +92,16 @@
   async function api(resource, options) {
     var params = new URLSearchParams((options && options.query) || {});
     params.set("resource", resource);
-    var result = await fetch("/api/portal?" + params.toString(), {
-      method: (options && options.method) || "GET",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: options && options.body ? JSON.stringify(options.body) : undefined
-    });
+    var result;
+    try {
+      result = await fetch("/api/portal?" + params.toString(), {
+        method: (options && options.method) || "GET",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: options && options.body ? JSON.stringify(options.body) : undefined
+      });
+    } catch (err) {
+      throw new Error("Could not reach volunteer pages. Refresh and try again.");
+    }
     var data = {};
     try {
       data = await result.json();
