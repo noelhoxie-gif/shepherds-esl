@@ -24,4 +24,10 @@ fs.mkdirSync(publicDir, { recursive: true });
 fs.cpSync(path.join(root, "assets"), path.join(publicDir, "assets"), {
   recursive: true
 });
+const notify = {
+  web3formsKey: String(process.env.WEB3FORMS_ACCESS_KEY || "").trim(),
+  emails: ["noel.hoxie@gmail.com", "larryphoxie@gmail.com"]
+};
+const notifyJs = "window.ESL_NOTIFY = " + JSON.stringify(notify) + ";\n";
+fs.writeFileSync(path.join(publicDir, "assets/js/notify-config.js"), notifyJs);
 console.log("Copied site files into public/ for Vercel.");

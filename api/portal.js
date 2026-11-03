@@ -317,8 +317,8 @@ async function handleWeekOff(body, url, key, req) {
     error.status = 500;
     throw error;
   }
-  await notifyAttendance(confirmed || saved);
-  return { item: confirmed || saved, items: items };
+  const notify = await notifyAttendance(confirmed || saved, req);
+  return { item: confirmed || saved, items: items, notify: notify };
 }
 
 function formatFriday(value) {
@@ -343,7 +343,27 @@ function attendanceNotifyEmails() {
   return ["noel.hoxie@gmail.com", "larryphoxie@gmail.com"];
 }
 
-async function notifyAttendance(item) {
+function siteOrigin(req) {
+  const forwardedHost = String((req && req.headers && (req.headers["x-forwarded-host"] || req.headers.host)) || "")
+    .split(",")[0]
+    .trim();
+  const host = forwardedHost || "shepherds-esl.vercel.app";
+  const proto = String((req && req.headers && req.headers["x-forwarded-proto"]) || "https")
+    .split(",")[0]
+    .trim() || "https";
+  return proto + "://" + host;
+}
+
+function fetchWithTimeout(url, options, ms) {
+  const timeoutMs = ms || 6000;
+  const opts = Object.assign({}, options || {});
+  if (typeof AbortSignal !== "undefined" && AbortSignal.timeout) {
+    opts.signal = AbortSignal.timeout(timeoutMs);
+  }
+  return fetch(url, opts);
+}
+
+async function notifyAttendance(item, req) {
   const recipients = attendanceNotifyEmails();
   const friday = formatFriday(item && item.week_of);
   const lines = [
@@ -359,12 +379,13 @@ async function notifyAttendance(item) {
   ];
   const text = lines.join("\n");
   const subject = "ESL attendance request: " + (item.volunteer_name || "volunteer") + " · " + friday;
+  const origin = siteOrigin(req);
 
   try {
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
-      const from = process.env.ATTENDANCE_FROM_EMAIL || "ESL Ministry <noreply@eslclassescary.com>";
-      const result = await fetch("https://api.resend.com/emails", {
+      const from = process.env.ATTENDANCE_FROM_EMAIL || "ESL Ministry <onboarding@resend.dev>";
+      const result = await fetchWithTimeout("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           Authorization: "Bearer " + resendKey,
@@ -377,19 +398,28 @@ async function notifyAttendance(item) {
           text: text
         })
       });
-      if (result.ok) return;
+      if (result.ok) return { ok: true, via: "resend" };
+      const errText = await result.text().catch(function () {
+        return "";
+      });
+      console.error("attendance-email resend failed", result.status, errText.slice(0, 300));
     }
 
-    await Promise.all(
+    const originHeaders = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Origin: origin,
+      Referer: origin + "/week-off.html"
+    };
+    const results = await Promise.all(
       recipients.map(function (to) {
-        return fetch("https://formsubmit.co/ajax/" + encodeURIComponent(to), {
+        return fetchWithTimeout("https://formsubmit.co/ajax/" + encodeURIComponent(to), {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json"
-          },
+          headers: originHeaders,
           body: JSON.stringify({
             _subject: subject,
+            _captcha: "false",
+            _template: "table",
             name: item.volunteer_name || "",
             email: item.volunteer_email || "",
             friday: friday,
@@ -398,11 +428,26 @@ async function notifyAttendance(item) {
             note: item.note || "",
             message: text
           })
-        });
+        })
+          .then(async function (result) {
+            const body = await result.text().catch(function () {
+              return "";
+            });
+            const ok = result.ok && !/522|521|error code/i.test(body) && /success|true|ok/i.test(body);
+            if (!ok) console.error("attendance-email formsubmit failed", to, result.status, body.slice(0, 200));
+            return ok;
+          })
+          .catch(function (err) {
+            console.error("attendance-email formsubmit error", to, err && err.message);
+            return false;
+          });
       })
     );
+    const sent = results.filter(Boolean).length;
+    return { ok: sent === recipients.length, via: "formsubmit", sent: sent };
   } catch (err) {
-    // The request is already saved; do not fail the volunteer submission.
+    console.error("attendance-email error", err && err.message);
+    return { ok: false, error: (err && err.message) || "email failed" };
   }
 }
 

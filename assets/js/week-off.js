@@ -97,6 +97,92 @@
     );
   }
 
+  function attendanceNotifyEmails() {
+    var configured = window.ESL_NOTIFY && window.ESL_NOTIFY.emails;
+    if (configured && configured.length) return configured;
+    return ["noel.hoxie@gmail.com", "larryphoxie@gmail.com"];
+  }
+
+  function sendAttendanceEmail(item) {
+    var friday = formatDate(item.week_of);
+    var text = [
+      "A volunteer submitted an attendance / week-off request.",
+      "",
+      "Name: " + (item.volunteer_name || ""),
+      "Email: " + (item.volunteer_email || ""),
+      "Friday: " + friday,
+      "Area: " + (item.class_level || ""),
+      "Assignment: " + (item.assignment || ""),
+      "Note: " + (item.note || ""),
+      "Status: " + (item.status || "submitted")
+    ].join("\n");
+    var subject = "ESL attendance request: " + (item.volunteer_name || "volunteer") + " · " + friday;
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, 6000) : null;
+    var signal = controller ? controller.signal : undefined;
+    var web3Key = window.ESL_NOTIFY && window.ESL_NOTIFY.web3formsKey;
+    var task;
+    if (web3Key) {
+      var emails = attendanceNotifyEmails();
+      task = fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          access_key: web3Key,
+          subject: subject,
+          from_name: "ESL Attendance",
+          name: item.volunteer_name || "",
+          email: item.volunteer_email || "",
+          ccemail: emails.filter(function (to) { return to !== emails[0]; }).join(","),
+          friday: friday,
+          area: item.class_level || "",
+          assignment: item.assignment || "",
+          note: item.note || "",
+          message: text
+        }),
+        signal: signal
+      }).then(function (response) {
+        return response.json().then(function (body) {
+          if (!response.ok || !body || body.success === false) {
+            throw new Error((body && body.message) || "Attendance email was not accepted.");
+          }
+        });
+      });
+    } else {
+      var payload = {
+        _subject: subject,
+        _captcha: "false",
+        _template: "table",
+        name: item.volunteer_name || "",
+        email: item.volunteer_email || "",
+        friday: friday,
+        area: item.class_level || "",
+        assignment: item.assignment || "",
+        note: item.note || "",
+        message: text
+      };
+      task = Promise.all(
+        attendanceNotifyEmails().map(function (to) {
+          return fetch("https://formsubmit.co/ajax/" + encodeURIComponent(to), {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(payload),
+            signal: signal
+          }).then(function (response) {
+            return response.text().then(function (body) {
+              if (!response.ok || /522|521|error code/i.test(body)) {
+                throw new Error("Attendance email was not accepted.");
+              }
+            });
+          });
+        })
+      );
+    }
+    return task.finally(function () {
+      if (timer) clearTimeout(timer);
+    });
+  }
+
   form.addEventListener("submit", function (event) {
     event.preventDefault();
     status.textContent = "Submitting…";
@@ -118,23 +204,28 @@
       })
       .then(function (result) {
         var saved = (result && result.item) || {};
+        var pending = {
+          week_of: String(saved.week_of || requestedDate).slice(0, 10),
+          volunteer_name: saved.volunteer_name || form.elements.volunteer_name.value.trim(),
+          volunteer_email: saved.volunteer_email || form.elements.volunteer_email.value.trim(),
+          class_level: saved.class_level || form.elements.class_level.value,
+          assignment: saved.assignment || form.elements.assignment.value.trim(),
+          note: saved.note || form.elements.note.value.trim(),
+          status: saved.status || "submitted"
+        };
         try {
-          window.sessionStorage.setItem(
-            "esl-pending-off",
-            JSON.stringify({
-              week_of: String(saved.week_of || requestedDate).slice(0, 10),
-              volunteer_name: saved.volunteer_name || form.elements.volunteer_name.value.trim(),
-              volunteer_email: saved.volunteer_email || form.elements.volunteer_email.value.trim(),
-              class_level: saved.class_level || form.elements.class_level.value,
-              assignment: saved.assignment || form.elements.assignment.value.trim(),
-              note: saved.note || form.elements.note.value.trim(),
-              status: saved.status || "submitted"
-            })
-          );
+          window.sessionStorage.setItem("esl-pending-off", JSON.stringify(pending));
         } catch (err) {}
-        window.location.assign(
-          "class-calendar.html?month=" + requestedDate.slice(0, 7) + "&off=" + requestedDate
-        );
+        var notify = result && result.notify;
+        var emailTask =
+          notify && notify.ok
+            ? Promise.resolve()
+            : sendAttendanceEmail(pending);
+        return emailTask.catch(function () {}).then(function () {
+          window.location.assign(
+            "class-calendar.html?month=" + requestedDate.slice(0, 7) + "&off=" + requestedDate
+          );
+        });
       })
       .catch(function (error) {
         showError(error);
