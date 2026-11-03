@@ -382,38 +382,6 @@ async function notifyAttendance(item, req) {
   const origin = siteOrigin(req);
 
   try {
-    const web3Key = String(process.env.WEB3FORMS_ACCESS_KEY || "61fc4699-58c5-4d9f-94b0-0f013fa44cc4").trim();
-    if (web3Key) {
-      const web3 = await fetchWithTimeout("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Origin: origin,
-          Referer: origin + "/week-off.html"
-        },
-        body: JSON.stringify({
-          access_key: web3Key,
-          subject: subject,
-          from_name: "ESL Attendance",
-          name: item.volunteer_name || "",
-          email: item.volunteer_email || "",
-          friday: friday,
-          area: item.class_level || "",
-          assignment: item.assignment || "",
-          note: item.note || "",
-          message: text
-        })
-      });
-      const web3Body = await web3.text().catch(function () {
-        return "";
-      });
-      if (web3.ok && /"success"\s*:\s*true/i.test(web3Body)) {
-        return { ok: true, via: "web3forms" };
-      }
-      console.error("attendance-email web3forms failed", web3.status, web3Body.slice(0, 300));
-    }
-
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
       const from = process.env.ATTENDANCE_FROM_EMAIL || "ESL Ministry <onboarding@resend.dev>";

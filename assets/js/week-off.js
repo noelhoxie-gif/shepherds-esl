@@ -214,16 +214,13 @@
         try {
           window.sessionStorage.setItem("esl-pending-off", JSON.stringify(pending));
         } catch (err) {}
-        var notify = result && result.notify;
-        var emailTask =
-          notify && notify.ok
-            ? Promise.resolve()
-            : sendAttendanceEmail(pending);
-        return emailTask.catch(function () {}).then(function () {
-          window.location.assign(
-            "class-calendar.html?month=" + requestedDate.slice(0, 7) + "&off=" + requestedDate
-          );
-        });
+        return sendAttendanceEmail(pending)
+          .catch(function () {})
+          .then(function () {
+            window.location.assign(
+              "class-calendar.html?month=" + requestedDate.slice(0, 7) + "&off=" + requestedDate
+            );
+          });
       })
       .catch(function (error) {
         showError(error);
